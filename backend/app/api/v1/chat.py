@@ -1,0 +1,33 @@
+import uuid
+
+from fastapi import APIRouter
+from fastapi.responses import StreamingResponse
+
+from app.api.deps import DB, CurrentUser
+from app.schemas.message import MessageCreate
+from app.services.chat_service import send_message_and_stream
+
+router = APIRouter(prefix="/chat", tags=["chat"])
+
+
+@router.post("/{conversation_id}/messages")
+async def send_message(
+    conversation_id: uuid.UUID,
+    data: MessageCreate,
+    db: DB,
+    current_user: CurrentUser,
+):
+    return StreamingResponse(
+        send_message_and_stream(
+            db=db,
+            conversation_id=conversation_id,
+            user_id=current_user.id,
+            content=data.content,
+        ),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+            "X-Accel-Buffering": "no",
+        },
+    )

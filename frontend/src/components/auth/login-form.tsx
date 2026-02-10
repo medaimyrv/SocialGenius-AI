@@ -32,7 +32,7 @@ export function LoginForm() {
       await login(email, password);
       router.push("/dashboard");
     } catch (err) {
-      setError(err instanceof Error ? err.message : "Error al iniciar sesion");
+      setError(err instanceof Error ? err.message : "Error al iniciar sesión");
     } finally {
       setIsLoading(false);
     }
@@ -45,7 +45,7 @@ export function LoginForm() {
           Social<span className="text-purple-400">Genius</span>
         </CardTitle>
         <CardDescription className="text-slate-400">
-          Inicia sesion en tu cuenta
+          Inicia sesión en tu cuenta
         </CardDescription>
       </CardHeader>
       <form onSubmit={handleSubmit}>
@@ -67,7 +67,7 @@ export function LoginForm() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Contrasena</label>
+            <label className="text-sm text-slate-300">Contraseña</label>
             <Input
               type="password"
               placeholder="********"
@@ -84,12 +84,12 @@ export function LoginForm() {
             className="w-full bg-purple-600 hover:bg-purple-700"
             disabled={isLoading}
           >
-            {isLoading ? "Iniciando sesion..." : "Iniciar Sesion"}
+            {isLoading ? "Iniciando sesión..." : "Iniciar Sesión"}
           </Button>
           <p className="text-sm text-slate-400">
-            No tienes cuenta?{" "}
+            ¿No tienes cuenta?{" "}
             <Link href="/register" className="text-purple-400 hover:underline">
-              Registrate
+              Regístrate
             </Link>
           </p>
         </CardFooter>

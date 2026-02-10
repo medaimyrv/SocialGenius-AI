@@ -37,7 +37,7 @@ export default function ChatConversationPage() {
   if (!conversation) {
     return (
       <div className="py-20 text-center text-slate-400">
-        Conversacion no encontrada
+        Conversación no encontrada
       </div>
     );
   }

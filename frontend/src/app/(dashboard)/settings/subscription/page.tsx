@@ -74,7 +74,7 @@ export default function SubscriptionPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Suscripcion</h1>
+        <h1 className="text-2xl font-bold text-white">Suscripción</h1>
         <p className="text-slate-400">Tu plan actual y uso</p>
       </div>
 

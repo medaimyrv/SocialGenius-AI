@@ -84,7 +84,7 @@ export default function ChatPage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Chat con IA</h1>
         <p className="text-slate-400">
-          Selecciona un tipo de conversacion para comenzar
+          Selecciona un tipo de conversación para comenzar
         </p>
       </div>
 

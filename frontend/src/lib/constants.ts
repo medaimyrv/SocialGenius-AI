@@ -2,7 +2,7 @@ export const API_URL = process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000
 export const APP_NAME = process.env.NEXT_PUBLIC_APP_NAME || "SocialGenius";
 
 export const CONVERSATION_TYPE_LABELS: Record<string, string> = {
-  business_analysis: "Analisis de Negocio",
+  business_analysis: "Análisis de Negocio",
   content_strategy: "Estrategia de Contenido",
   calendar_creation: "Crear Calendario",
   copywriting: "Copywriting",

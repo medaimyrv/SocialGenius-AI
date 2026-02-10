@@ -17,7 +17,7 @@ export default function SettingsPage() {
   return (
     <div className="mx-auto max-w-2xl space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-white">Configuracion</h1>
+        <h1 className="text-2xl font-bold text-white">Configuración</h1>
         <p className="text-slate-400">Gestiona tu cuenta</p>
       </div>
 
@@ -25,7 +25,7 @@ export default function SettingsPage() {
         <CardHeader>
           <CardTitle className="text-white">Perfil</CardTitle>
           <CardDescription className="text-slate-400">
-            Informacion de tu cuenta
+            Información de tu cuenta
           </CardDescription>
         </CardHeader>
         <CardContent className="space-y-4">
@@ -42,9 +42,9 @@ export default function SettingsPage() {
 
       <Card className="border-slate-800 bg-slate-900">
         <CardHeader>
-          <CardTitle className="text-white">Suscripcion</CardTitle>
+          <CardTitle className="text-white">Suscripción</CardTitle>
           <CardDescription className="text-slate-400">
-            Gestiona tu plan y facturacion
+            Gestiona tu plan y facturación
           </CardDescription>
         </CardHeader>
         <CardContent>

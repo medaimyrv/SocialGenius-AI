@@ -36,7 +36,7 @@ export default function DashboardPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-slate-400">
-                Inicia una conversacion con la IA
+                Inicia una conversación con la IA
               </p>
             </CardContent>
           </Card>
@@ -101,7 +101,7 @@ export default function DashboardPage() {
             <div>
               <p className="font-medium text-white">Crea tu perfil de negocio</p>
               <p className="text-sm text-slate-400">
-                Agrega informacion sobre tu negocio, industria y audiencia objetivo
+                Agrega información sobre tu negocio, industria y audiencia objetivo
               </p>
             </div>
           </div>
@@ -112,7 +112,7 @@ export default function DashboardPage() {
             <div>
               <p className="font-medium text-white">Chatea con la IA</p>
               <p className="text-sm text-slate-400">
-                Solicita analisis, estrategias, calendarios o copywriting
+                Solicita análisis, estrategias, calendarios o copywriting
               </p>
             </div>
           </div>
@@ -123,7 +123,7 @@ export default function DashboardPage() {
             <div>
               <p className="font-medium text-white">Revisa y publica</p>
               <p className="text-sm text-slate-400">
-                Edita el contenido generado y publicalo en tus redes
+                Edita el contenido generado y publícalo en tus redes
               </p>
             </div>
           </div>

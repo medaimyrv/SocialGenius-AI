@@ -60,7 +60,7 @@ export function RegisterForm() {
             <label className="text-sm text-slate-300">Nombre completo</label>
             <Input
               type="text"
-              placeholder="Juan Perez"
+              placeholder="Juan Pérez"
               value={fullName}
               onChange={(e) => setFullName(e.target.value)}
               className="border-white/10 bg-white/5 text-white placeholder:text-slate-500"
@@ -78,7 +78,7 @@ export function RegisterForm() {
             />
           </div>
           <div className="space-y-2">
-            <label className="text-sm text-slate-300">Contrasena</label>
+            <label className="text-sm text-slate-300">Contraseña</label>
             <Input
               type="password"
               placeholder="********"
@@ -99,9 +99,9 @@ export function RegisterForm() {
             {isLoading ? "Creando cuenta..." : "Crear Cuenta"}
           </Button>
           <p className="text-sm text-slate-400">
-            Ya tienes cuenta?{" "}
+            ¿Ya tienes cuenta?{" "}
             <Link href="/login" className="text-purple-400 hover:underline">
-              Inicia sesion
+              Inicia sesión
             </Link>
           </p>
         </CardFooter>

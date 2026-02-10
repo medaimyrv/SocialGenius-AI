@@ -14,7 +14,7 @@ export default function LandingPage() {
           <div className="flex gap-3">
             <Link href="/login">
               <Button variant="ghost" className="text-white hover:text-purple-300">
-                Iniciar Sesion
+                Iniciar Sesión
               </Button>
             </Link>
             <Link href="/register">
@@ -57,7 +57,7 @@ export default function LandingPage() {
             </CardHeader>
             <CardContent className="text-slate-300">
               Genera calendarios semanales completos con contenido listo para
-              publicar, horarios optimos y formatos especificos para cada
+              publicar, horarios óptimos y formatos específicos para cada
               plataforma.
             </CardContent>
           </Card>
@@ -76,17 +76,17 @@ export default function LandingPage() {
               <CardTitle className="text-white">Hashtags y Tendencias</CardTitle>
             </CardHeader>
             <CardContent className="text-slate-300">
-              Investigacion de hashtags con sets pre-armados, tendencias de
+              Investigación de hashtags con sets pre-armados, tendencias de
               TikTok relevantes y estrategia personalizada para tu nicho.
             </CardContent>
           </Card>
           <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-white">Analisis de Negocio</CardTitle>
+              <CardTitle className="text-white">Análisis de Negocio</CardTitle>
             </CardHeader>
             <CardContent className="text-slate-300">
               La IA analiza tu industria, audiencia y competidores para crear
-              estrategias personalizadas y pilares de contenido unicos.
+              estrategias personalizadas y pilares de contenido únicos.
             </CardContent>
           </Card>
           <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
@@ -94,16 +94,16 @@ export default function LandingPage() {
               <CardTitle className="text-white">Instagram + TikTok</CardTitle>
             </CardHeader>
             <CardContent className="text-slate-300">
-              Estrategias especificas: Reels, Carruseles, Stories, videos de
+              Estrategias específicas: Reels, Carruseles, Stories, videos de
               TikTok, challenges y formatos trending.
             </CardContent>
           </Card>
           <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
             <CardHeader>
-              <CardTitle className="text-white">IA de Ultima Generacion</CardTitle>
+              <CardTitle className="text-white">IA de Última Generación</CardTitle>
             </CardHeader>
             <CardContent className="text-slate-300">
-              Potenciado por GPT-4o y Claude para contenido de la mas alta
+              Potenciado por GPT-4o y Claude para contenido de la más alta
               calidad, adaptado a la voz de tu marca.
             </CardContent>
           </Card>

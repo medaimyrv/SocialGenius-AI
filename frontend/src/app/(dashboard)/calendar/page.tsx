@@ -39,7 +39,7 @@ export default function CalendarPage() {
       ) : calendars.length === 0 ? (
         <Card className="border-slate-800 bg-slate-900">
           <CardContent className="py-12 text-center">
-            <p className="text-slate-400">No tienes calendarios aun</p>
+            <p className="text-slate-400">No tienes calendarios aún</p>
             <p className="mt-2 text-sm text-slate-500">
               Inicia un chat de tipo &quot;Crear Calendario&quot; para generar uno
             </p>

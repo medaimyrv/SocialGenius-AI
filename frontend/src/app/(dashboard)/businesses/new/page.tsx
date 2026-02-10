@@ -65,7 +65,7 @@ export default function NewBusinessPage() {
       <div>
         <h1 className="text-2xl font-bold text-white">Nuevo Negocio</h1>
         <p className="text-slate-400">
-          Agrega la informacion de tu negocio para que la IA pueda generar
+          Agrega la información de tu negocio para que la IA pueda generar
           estrategias personalizadas
         </p>
       </div>
@@ -73,7 +73,7 @@ export default function NewBusinessPage() {
       <form onSubmit={handleSubmit}>
         <Card className="border-slate-800 bg-slate-900">
           <CardHeader>
-            <CardTitle className="text-white">Informacion basica</CardTitle>
+            <CardTitle className="text-white">Información básica</CardTitle>
             <CardDescription className="text-slate-400">
               Estos datos se usan para personalizar las estrategias de contenido
             </CardDescription>
@@ -103,13 +103,13 @@ export default function NewBusinessPage() {
                 name="industry"
                 value={form.industry}
                 onChange={handleChange}
-                placeholder="ej: Gastronomia, Fitness, Tecnologia, Moda..."
+                placeholder="ej: Gastronomía, Fitness, Tecnología, Moda..."
                 required
                 className={inputClass}
               />
             </div>
             <div className="space-y-2">
-              <label className="text-sm text-slate-300">Descripcion *</label>
+              <label className="text-sm text-slate-300">Descripción *</label>
               <textarea
                 name="description"
                 value={form.description}

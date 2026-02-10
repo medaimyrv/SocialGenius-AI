@@ -51,7 +51,7 @@ export default function BusinessesPage() {
         <Card className="border-slate-800 bg-slate-900">
           <CardContent className="py-12 text-center">
             <p className="text-slate-400">
-              No tienes negocios registrados aun
+              No tienes negocios registrados aún
             </p>
             <Link href="/businesses/new">
               <Button className="mt-4 bg-purple-600 hover:bg-purple-700">

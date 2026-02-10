@@ -49,7 +49,7 @@ export function ChatContainer({
                 Social<span className="text-purple-400">Genius</span> IA
               </h2>
               <p className="mt-2 text-slate-400">
-                Envia un mensaje para empezar. Puedo ayudarte con:
+                Envía un mensaje para empezar. Puedo ayudarte con:
               </p>
               <div className="mx-auto mt-6 grid max-w-md gap-2">
                 {[

@@ -38,7 +38,7 @@ export default function ContentPage() {
       ) : pieces.length === 0 ? (
         <Card className="border-slate-800 bg-slate-900">
           <CardContent className="py-12 text-center">
-            <p className="text-slate-400">No hay contenido generado aun</p>
+            <p className="text-slate-400">No hay contenido generado aún</p>
             <p className="mt-2 text-sm text-slate-500">
               Genera un calendario editorial para crear piezas de contenido
             </p>

@@ -42,5 +42,8 @@ htmlcov/
 # Redis
 dump.rdb
 
+# Database
+*.db
+
 # Alembic
 backend/alembic/versions/__pycache__/

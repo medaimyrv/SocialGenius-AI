@@ -2,8 +2,7 @@ import uuid
 from datetime import date, time
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Date, Enum as SAEnum, ForeignKey, String, Text, Time
-from sqlalchemy.dialects.postgresql import ARRAY
+from sqlalchemy import Date, Enum as SAEnum, ForeignKey, JSON, String, Text, Time
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.constants import ContentFormat
@@ -25,7 +24,7 @@ class ContentPiece(UUIDMixin, TimestampMixin, Base):
     )
     topic: Mapped[str] = mapped_column(String(500), nullable=False)
     caption: Mapped[str] = mapped_column(Text, nullable=False)
-    hashtags: Mapped[list[str] | None] = mapped_column(ARRAY(String))
+    hashtags: Mapped[list[str] | None] = mapped_column(JSON)
     visual_description: Mapped[str | None] = mapped_column(Text)
     hook: Mapped[str | None] = mapped_column(String(500))
     call_to_action: Mapped[str | None] = mapped_column(String(500))

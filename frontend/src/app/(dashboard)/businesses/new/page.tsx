@@ -134,20 +134,13 @@ export default function NewBusinessPage() {
             </div>
             <div className="space-y-2">
               <label className="text-sm text-slate-300">Voz de marca</label>
-              <select
+              <Input
                 name="brand_voice"
                 value={form.brand_voice}
                 onChange={handleChange}
-                className={`w-full rounded-md border px-3 py-2 text-sm ${inputClass}`}
-              >
-                <option value="">Seleccionar...</option>
-                <option value="profesional">Profesional</option>
-                <option value="casual">Casual</option>
-                <option value="divertido">Divertido</option>
-                <option value="inspirador">Inspirador</option>
-                <option value="educativo">Educativo</option>
-                <option value="lujoso">Lujoso</option>
-              </select>
+                placeholder="ej: Cercana y amigable, Profesional, Divertida, Inspiradora..."
+                className={inputClass}
+              />
             </div>
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">

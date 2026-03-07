@@ -41,3 +41,4 @@ async def health_check():
 from app.api.v1.router import api_v1_router  # noqa: E402
 
 app.include_router(api_v1_router, prefix="/api/v1")
+

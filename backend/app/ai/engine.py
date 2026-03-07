@@ -1,7 +1,6 @@
 from collections.abc import AsyncGenerator
 
-import anthropic
-import openai
+from huggingface_hub import InferenceClient
 
 from app.config import settings
 from app.core.constants import ConversationType
@@ -12,16 +11,6 @@ from .prompts.calendar_creation import CalendarCreationPrompt
 from .prompts.content_strategy import ContentStrategyPrompt
 from .prompts.copywriting import CopywritingPrompt
 from .prompts.hashtag_research import HashtagResearchPrompt
-
-# Model routing: which AI model to use for each conversation type
-MODEL_ROUTING = {
-    ConversationType.BUSINESS_ANALYSIS: "anthropic",
-    ConversationType.CONTENT_STRATEGY: "anthropic",
-    ConversationType.CALENDAR_CREATION: "openai",
-    ConversationType.COPYWRITING: "openai",
-    ConversationType.HASHTAG_RESEARCH: "openai",
-    ConversationType.GENERAL: "openai",
-}
 
 # Prompt registry
 PROMPT_REGISTRY = {
@@ -34,31 +23,22 @@ PROMPT_REGISTRY = {
 
 # General assistant system prompt
 GENERAL_SYSTEM_PROMPT = """Eres SocialGenius, un asistente de IA experto en marketing digital
-y redes sociales. Ayudas a emprendedores y pequenas empresas a crear estrategias
+y redes sociales. Ayudas a emprendedores y pequeñas empresas a crear estrategias
 de contenido efectivas para Instagram y TikTok. Responde de manera clara,
-accionable y especifica. Responde siempre en espanol."""
+accionable y específica. Responde siempre en español."""
 
 
 class AIEngine:
     def __init__(self):
-        self._openai_client: openai.AsyncOpenAI | None = None
-        self._anthropic_client: anthropic.AsyncAnthropic | None = None
+        self._hf_client: InferenceClient | None = None
 
     @property
-    def openai_client(self) -> openai.AsyncOpenAI:
-        if self._openai_client is None:
-            self._openai_client = openai.AsyncOpenAI(
-                api_key=settings.OPENAI_API_KEY
+    def hf_client(self) -> InferenceClient:
+        if self._hf_client is None:
+            self._hf_client = InferenceClient(
+                api_key=settings.HUGGINGFACE_API_KEY,
             )
-        return self._openai_client
-
-    @property
-    def anthropic_client(self) -> anthropic.AsyncAnthropic:
-        if self._anthropic_client is None:
-            self._anthropic_client = anthropic.AsyncAnthropic(
-                api_key=settings.ANTHROPIC_API_KEY
-            )
-        return self._anthropic_client
+        return self._hf_client
 
     async def stream_response(
         self,
@@ -73,54 +53,28 @@ class AIEngine:
         else:
             system_prompt = GENERAL_SYSTEM_PROMPT
 
-        # Select provider
-        provider = MODEL_ROUTING.get(conversation_type, "openai")
-
-        if provider == "anthropic" and settings.ANTHROPIC_API_KEY:
-            async for chunk in self._stream_anthropic(system_prompt, messages):
-                yield chunk
-        else:
-            async for chunk in self._stream_openai(system_prompt, messages):
-                yield chunk
-
-    async def _stream_openai(
-        self, system_prompt: str, messages: list[dict]
-    ) -> AsyncGenerator[str | dict, None]:
-        model = settings.DEFAULT_OPENAI_MODEL
+        model = settings.HUGGINGFACE_MODEL
         yield {"model": model}
 
+        async for chunk in self._stream_huggingface(system_prompt, messages, model):
+            yield chunk
+
+    async def _stream_huggingface(
+        self, system_prompt: str, messages: list[dict], model: str
+    ) -> AsyncGenerator[str, None]:
         api_messages = [{"role": "system", "content": system_prompt}]
         api_messages.extend(messages)
 
-        stream = await self.openai_client.chat.completions.create(
+        stream = self.hf_client.chat.completions.create(
             model=model,
             messages=api_messages,
             stream=True,
             temperature=0.7,
-            max_tokens=4096,
+            max_tokens=2048,
         )
 
-        async for chunk in stream:
+        for chunk in stream:
             if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
 
-    async def _stream_anthropic(
-        self, system_prompt: str, messages: list[dict]
-    ) -> AsyncGenerator[str | dict, None]:
-        model = settings.DEFAULT_ANTHROPIC_MODEL
-        yield {"model": model}
-
-        # Filter out system messages from the message list for Anthropic
-        api_messages = [
-            msg for msg in messages if msg["role"] != "system"
-        ]
-
-        async with self.anthropic_client.messages.stream(
-            model=model,
-            system=system_prompt,
-            messages=api_messages,
-            max_tokens=4096,
-            temperature=0.7,
-        ) as stream:
-            async for text in stream.text_stream:
-                yield text
+ai_engine = AIEngine()

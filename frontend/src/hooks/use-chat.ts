@@ -15,8 +15,6 @@ export function useChat(conversationId: string) {
       const conversation = await api.get<{ messages: Message[] }>(
         `/conversations/${conversationId}`,
       );
-      // The conversation endpoint returns messages via relationship
-      // We need a dedicated messages endpoint or extract from conversation
       if (conversation && Array.isArray((conversation as any).messages)) {
         setMessages((conversation as any).messages);
       }
@@ -29,7 +27,6 @@ export function useChat(conversationId: string) {
     (content: string) => {
       if (isStreaming) return;
 
-      // Add user message optimistically
       const userMessage: Message = {
         id: crypto.randomUUID(),
         conversation_id: conversationId,

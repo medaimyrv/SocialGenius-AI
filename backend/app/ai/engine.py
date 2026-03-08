@@ -1,6 +1,6 @@
 from collections.abc import AsyncGenerator
 
-from huggingface_hub import InferenceClient
+from huggingface_hub import AsyncInferenceClient
 
 from app.config import settings
 from app.core.constants import ConversationType
@@ -30,12 +30,12 @@ accionable y específica. Responde siempre en español."""
 
 class AIEngine:
     def __init__(self):
-        self._hf_client: InferenceClient | None = None
+        self._hf_client: AsyncInferenceClient | None = None
 
     @property
-    def hf_client(self) -> InferenceClient:
+    def hf_client(self) -> AsyncInferenceClient:
         if self._hf_client is None:
-            self._hf_client = InferenceClient(
+            self._hf_client = AsyncInferenceClient(
                 api_key=settings.HUGGINGFACE_API_KEY,
             )
         return self._hf_client
@@ -65,7 +65,7 @@ class AIEngine:
         api_messages = [{"role": "system", "content": system_prompt}]
         api_messages.extend(messages)
 
-        stream = self.hf_client.chat.completions.create(
+        stream = await self.hf_client.chat.completions.create(
             model=model,
             messages=api_messages,
             stream=True,
@@ -73,7 +73,7 @@ class AIEngine:
             max_tokens=2048,
         )
 
-        for chunk in stream:
+        async for chunk in stream:
             if chunk.choices and chunk.choices[0].delta.content:
                 yield chunk.choices[0].delta.content
 

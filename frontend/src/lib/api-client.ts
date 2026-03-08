@@ -140,6 +140,10 @@ class ApiClient {
             if (line.startsWith("data: ")) {
               try {
                 const data = JSON.parse(line.slice(6));
+                if (data.error) {
+                  onError(new Error(data.error));
+                  return;
+                }
                 if (data.done) {
                   onDone();
                   return;

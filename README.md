@@ -25,16 +25,16 @@ Chatbot de IA que analiza negocios y genera estrategias de contenido para Instag
 ### Base de Datos
 | Tecnologia | Uso |
 |---|---|
-| SQLite | BD relacional (desarrollo) |
-| SQLAlchemy 2.0 | ORM async con aiosqlite |
-| Alembic | Migraciones de esquema |
+| SQLite | BD relacional (desarrollo local) |
+| PostgreSQL | BD relacional (produccion en Railway) |
+| SQLAlchemy 2.0 | ORM async (aiosqlite / asyncpg) |
 
 ### Inteligencia Artificial
 | Tecnologia | Uso |
 |---|---|
 | Hugging Face Inference API | Proveedor de IA (gratuito) |
-| Llama 3.2 3B Instruct | Modelo de lenguaje |
-| InferenceClient | SDK de HuggingFace |
+| Qwen/Qwen2.5-72B-Instruct | Modelo de lenguaje |
+| AsyncInferenceClient | SDK async de HuggingFace |
 
 ### Autenticacion
 | Tecnologia | Uso |
@@ -42,13 +42,21 @@ Chatbot de IA que analiza negocios y genera estrategias de contenido para Instag
 | JWT | Access + Refresh tokens |
 | passlib + bcrypt | Hashing de contrasenas |
 
-## Requisitos
+## Despliegue
+
+| Capa | Plataforma |
+|---|---|
+| Frontend | Vercel |
+| Backend | Railway |
+| Base de datos | PostgreSQL en Railway |
+
+## Requisitos (desarrollo local)
 
 - Node.js 18+
 - Python 3.12+
-- Token de Hugging Face (gratuito)
+- Token de Hugging Face (gratuito en huggingface.co/settings/tokens)
 
-## Instalacion
+## Instalacion local
 
 ### Backend
 
@@ -65,16 +73,15 @@ Crear archivo `backend/.env`:
 DATABASE_URL=sqlite+aiosqlite:///./socialgenius.db
 SYNC_DATABASE_URL=sqlite:///./socialgenius.db
 JWT_SECRET_KEY=tu-clave-secreta
-HUGGINGFACE_API_KEY=tu-token-de-huggingface
-HUGGINGFACE_MODEL=meta-llama/Llama-3.2-3B-Instruct
+HUGGINGFACE_API_KEY=hf_xxxxxxxxxxxx
+HUGGINGFACE_MODEL=Qwen/Qwen2.5-72B-Instruct
 ```
 
-Ejecutar migraciones y levantar:
+Levantar el servidor (las tablas se crean automaticamente al iniciar):
 
 ```bash
 cd backend
 source venv/bin/activate
-alembic upgrade head
 uvicorn app.main:app --reload --port 8000
 ```
 
@@ -86,7 +93,28 @@ npm install
 npm run dev
 ```
 
+Crear archivo `frontend/.env.local`:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+```
+
 Abrir http://localhost:3000
+
+## Variables de entorno en produccion
+
+### Railway (backend)
+```
+DATABASE_URL=postgresql://...        # proporcionada por Railway PostgreSQL
+JWT_SECRET_KEY=clave-aleatoria-segura
+HUGGINGFACE_API_KEY=hf_xxxxxxxxxxxx
+HUGGINGFACE_MODEL=Qwen/Qwen2.5-72B-Instruct
+```
+
+### Vercel (frontend)
+```
+NEXT_PUBLIC_API_URL=https://tu-servicio.up.railway.app/api/v1
+```
 
 ## Estructura del Proyecto
 
@@ -113,15 +141,7 @@ SocialGenius-AI/
 │   │   ├── db/              # Conexion a BD
 │   │   ├── models/          # SQLAlchemy models
 │   │   └── services/        # Logica de negocio
-│   └── alembic/             # Migraciones
+│   ├── Procfile             # Comando de inicio para Railway
+│   └── railway.toml         # Configuracion de Railway
 └── README.md
 ```
-
-## Stack de Produccion (futuro)
-
-| Desarrollo | Produccion |
-|---|---|
-| SQLite | PostgreSQL |
-| HuggingFace (gratis) | OpenAI / Anthropic |
-| - | Redis (cache/sesiones) |
-| Stripe test mode | Stripe live |

@@ -8,11 +8,24 @@ from app.config import settings
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Startup
-    yield
-    # Shutdown
+    # Startup: create all tables if they don't exist
     from app.db.session import engine
+    from app.models.base import Base
+    # Import all models so SQLAlchemy registers them
+    import app.models.user  # noqa
+    import app.models.business  # noqa
+    import app.models.conversation  # noqa
+    import app.models.message  # noqa
+    import app.models.content_calendar  # noqa
+    import app.models.content_piece  # noqa
+    import app.models.subscription  # noqa
 
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+
+    yield
+
+    # Shutdown
     await engine.dispose()
 
 
@@ -26,6 +39,7 @@ app = FastAPI(
 app.add_middleware(
     CORSMiddleware,
     allow_origins=settings.CORS_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

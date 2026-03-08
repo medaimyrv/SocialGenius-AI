@@ -15,8 +15,9 @@ export function useChat(conversationId: string) {
       const conversation = await api.get<{ messages: Message[] }>(
         `/conversations/${conversationId}`,
       );
-      if (conversation && Array.isArray((conversation as any).messages)) {
-        setMessages((conversation as any).messages);
+      const data = conversation as { messages?: Message[] };
+      if (data && Array.isArray(data.messages)) {
+        setMessages(data.messages);
       }
     } catch (error) {
       console.error("Failed to load messages:", error);

@@ -71,7 +71,10 @@ async def send_message_and_stream(
     full_response = ""
     model_used = ""
 
+    logger.info(f"Starting AI stream | conversation={conversation_id} type={conversation.conversation_type} business={business.name if business else None}")
+
     try:
+        chunk_count = 0
         async for chunk_data in ai_engine.stream_response(
             conversation_type=conversation.conversation_type,
             messages=messages_for_ai,
@@ -79,11 +82,16 @@ async def send_message_and_stream(
         ):
             if isinstance(chunk_data, dict):
                 model_used = chunk_data.get("model", "")
+                logger.info(f"Using model: {model_used}")
                 continue
             full_response += chunk_data
+            chunk_count += 1
+            if chunk_count == 1:
+                logger.info("First chunk received from HuggingFace ✓")
             yield f"data: {json.dumps({'content': chunk_data})}\n\n"
+        logger.info(f"Stream complete | chunks={chunk_count} total_chars={len(full_response)}")
     except Exception as e:
-        logger.error(f"Error streaming AI response: {e}")
+        logger.error(f"Error streaming AI response: {e}", exc_info=True)
         yield f"data: {json.dumps({'error': str(e)})}\n\n"
 
     # Save assistant message

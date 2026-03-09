@@ -37,6 +37,7 @@ class AIEngine:
         if self._hf_client is None:
             self._hf_client = AsyncInferenceClient(
                 api_key=settings.HUGGINGFACE_API_KEY,
+                provider="hf-inference",
             )
         return self._hf_client
 

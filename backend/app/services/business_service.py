@@ -48,6 +48,7 @@ async def update_business(
     for key, value in update_data.items():
         setattr(business, key, value)
     await db.flush()
+    await db.refresh(business)
     return business
 
 

@@ -17,7 +17,7 @@ export default function LandingPage() {
                 Iniciar Sesión
               </Button>
             </Link>
-            <Link href="/register">
+            <Link href="/register" className="hidden sm:block">
               <Button className="bg-purple-600 hover:bg-purple-700 px-3 text-sm sm:px-4 sm:text-base">
                 Empezar Gratis
               </Button>

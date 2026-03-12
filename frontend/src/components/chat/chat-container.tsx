@@ -40,7 +40,7 @@ export function ChatContainer({
   }, [messages, streamedContent]);
 
   return (
-    <div className="flex h-[calc(100vh-8rem)] flex-col">
+    <div className="flex h-[calc(100dvh-7.5rem)] flex-col md:h-[calc(100vh-8rem)]">
       <ScrollArea className="flex-1 px-4" ref={scrollRef}>
         <div className="mx-auto max-w-3xl space-y-4 py-4">
           {messages.length === 0 && !isStreaming && (

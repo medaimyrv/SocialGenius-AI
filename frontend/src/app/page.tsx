@@ -7,18 +7,18 @@ export default function LandingPage() {
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-purple-950 to-slate-950">
       {/* Navbar */}
       <nav className="border-b border-white/10 backdrop-blur-sm">
-        <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-4">
-          <h1 className="text-2xl font-bold text-white">
+        <div className="mx-auto flex max-w-7xl items-center justify-between px-4 py-4 sm:px-6">
+          <h1 className="text-xl font-bold text-white sm:text-2xl">
             Social<span className="text-purple-400">Genius</span>
           </h1>
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <Link href="/login">
-              <Button variant="ghost" className="text-white hover:text-purple-300">
+              <Button variant="ghost" className="text-white hover:text-purple-300 px-3 text-sm sm:px-4 sm:text-base">
                 Iniciar Sesión
               </Button>
             </Link>
             <Link href="/register">
-              <Button className="bg-purple-600 hover:bg-purple-700">
+              <Button className="bg-purple-600 hover:bg-purple-700 px-3 text-sm sm:px-4 sm:text-base">
                 Empezar Gratis
               </Button>
             </Link>
@@ -27,21 +27,21 @@ export default function LandingPage() {
       </nav>
 
       {/* Hero */}
-      <section className="mx-auto max-w-7xl px-6 py-24 text-center">
-        <h2 className="mx-auto max-w-4xl text-5xl font-bold leading-tight text-white">
+      <section className="mx-auto max-w-7xl px-4 py-12 text-center sm:px-6 md:py-24">
+        <h2 className="mx-auto max-w-4xl text-3xl font-bold leading-tight text-white sm:text-4xl md:text-5xl">
           Estrategias de contenido con{" "}
           <span className="bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
             Inteligencia Artificial
           </span>
         </h2>
-        <p className="mx-auto mt-6 max-w-2xl text-lg text-slate-300">
+        <p className="mx-auto mt-4 max-w-2xl text-base text-slate-300 sm:mt-6 sm:text-lg">
           SocialGenius analiza tu negocio y genera calendarios editoriales,
           copywriting optimizado, hashtags relevantes y estrategias completas
           para Instagram y TikTok.
         </p>
-        <div className="mt-10 flex justify-center gap-4">
+        <div className="mt-8 flex justify-center gap-4 sm:mt-10">
           <Link href="/register">
-            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 text-lg px-8">
+            <Button size="lg" className="bg-purple-600 hover:bg-purple-700 px-6 text-base sm:px-8 sm:text-lg">
               Comenzar Gratis
             </Button>
           </Link>
@@ -49,8 +49,8 @@ export default function LandingPage() {
       </section>
 
       {/* Features */}
-      <section className="mx-auto max-w-7xl px-6 pb-24">
-        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-24">
+        <div className="grid gap-4 sm:gap-6 grid-cols-1 md:grid-cols-2 lg:grid-cols-3">
           <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-white">Calendario Editorial</CardTitle>
@@ -111,11 +111,11 @@ export default function LandingPage() {
       </section>
 
       {/* Pricing */}
-      <section className="mx-auto max-w-7xl px-6 pb-24">
-        <h3 className="mb-12 text-center text-3xl font-bold text-white">
+      <section className="mx-auto max-w-7xl px-4 pb-12 sm:px-6 sm:pb-24">
+        <h3 className="mb-8 text-center text-2xl font-bold text-white sm:mb-12 sm:text-3xl">
           Planes
         </h3>
-        <div className="mx-auto grid max-w-4xl gap-8 md:grid-cols-2">
+        <div className="mx-auto grid max-w-4xl gap-6 sm:gap-8 grid-cols-1 md:grid-cols-2">
           <Card className="border-white/10 bg-white/5 backdrop-blur-sm">
             <CardHeader>
               <CardTitle className="text-white">Gratis</CardTitle>

@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import {
   Card,
@@ -9,6 +10,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { api } from "@/lib/api-client";
 import { CONVERSATION_TYPE_LABELS } from "@/lib/constants";
 import type { Business, Conversation, ConversationType } from "@/types";
@@ -76,6 +78,28 @@ export default function ChatPage() {
       setIsCreating(false);
     }
   };
+
+  // Onboarding: sin negocios
+  if (businesses.length === 0) {
+    return (
+      <div className="flex min-h-[70vh] flex-col items-center justify-center px-4 text-center">
+        <div className="mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-purple-600/20">
+          <svg className="h-8 w-8 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+            <path strokeLinecap="round" strokeLinejoin="round" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1m4-4h1m-1 4h1m-5 10v-5a1 1 0 011-1h2a1 1 0 011 1v5m-4 0h4" />
+          </svg>
+        </div>
+        <h2 className="text-xl font-bold text-white">Primero crea tu negocio</h2>
+        <p className="mt-2 max-w-sm text-slate-400">
+          La IA necesita conocer tu negocio para generar contenido personalizado.
+        </p>
+        <Link href="/businesses/new" className="mt-6">
+          <Button className="bg-purple-600 hover:bg-purple-700">
+            Crear perfil de negocio
+          </Button>
+        </Link>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">

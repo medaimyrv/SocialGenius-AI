@@ -79,11 +79,6 @@ export default function NewBusinessPage() {
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {error && (
-              <div className="rounded-md bg-red-500/10 p-3 text-sm text-red-400">
-                {error}
-              </div>
-            )}
             <div className="space-y-2">
               <label className="text-sm text-slate-300">
                 Nombre del negocio *
@@ -179,7 +174,12 @@ export default function NewBusinessPage() {
             </div>
           </CardContent>
         </Card>
-        <div className="mt-6 flex justify-end gap-3">
+        {error && (
+          <div className="mt-4 rounded-md bg-red-500/10 p-3 text-sm text-red-400">
+            {error}
+          </div>
+        )}
+        <div className="mt-4 flex justify-end gap-3">
           <Button
             type="button"
             variant="outline"

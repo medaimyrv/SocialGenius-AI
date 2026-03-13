@@ -23,17 +23,16 @@ class ApiClient {
     return headers;
   }
 
-  private async handleResponse<T>(response: Response): Promise<T> {
-    if (response.status === 401) {
-      // Try to refresh token
+  private async handleResponse<T>(response: Response, retry?: () => Promise<T>): Promise<T> {
+    if (response.status === 401 && retry) {
       const refreshed = await this.tryRefreshToken();
       if (!refreshed) {
         localStorage.removeItem("access_token");
         localStorage.removeItem("refresh_token");
         window.location.href = "/login";
-        throw new Error("Session expired");
+        throw new Error("Sesión expirada");
       }
-      throw new Error("Token refreshed, retry request");
+      return retry();
     }
 
     if (!response.ok) {
@@ -71,36 +70,42 @@ class ApiClient {
   }
 
   async get<T>(path: string): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      headers: this.getHeaders(),
-    });
-    return this.handleResponse<T>(response);
+    const doRequest = () =>
+      fetch(`${this.baseUrl}${path}`, { headers: this.getHeaders() });
+    const response = await doRequest();
+    return this.handleResponse<T>(response, () => this.get<T>(path));
   }
 
   async post<T>(path: string, body?: unknown): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method: "POST",
-      headers: this.getHeaders(),
-      body: body ? JSON.stringify(body) : undefined,
-    });
-    return this.handleResponse<T>(response);
+    const doRequest = () =>
+      fetch(`${this.baseUrl}${path}`, {
+        method: "POST",
+        headers: this.getHeaders(),
+        body: body ? JSON.stringify(body) : undefined,
+      });
+    const response = await doRequest();
+    return this.handleResponse<T>(response, () => this.post<T>(path, body));
   }
 
   async patch<T>(path: string, body: unknown): Promise<T> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method: "PATCH",
-      headers: this.getHeaders(),
-      body: JSON.stringify(body),
-    });
-    return this.handleResponse<T>(response);
+    const doRequest = () =>
+      fetch(`${this.baseUrl}${path}`, {
+        method: "PATCH",
+        headers: this.getHeaders(),
+        body: JSON.stringify(body),
+      });
+    const response = await doRequest();
+    return this.handleResponse<T>(response, () => this.patch<T>(path, body));
   }
 
   async delete(path: string): Promise<void> {
-    const response = await fetch(`${this.baseUrl}${path}`, {
-      method: "DELETE",
-      headers: this.getHeaders(),
-    });
-    return this.handleResponse<void>(response);
+    const doRequest = () =>
+      fetch(`${this.baseUrl}${path}`, {
+        method: "DELETE",
+        headers: this.getHeaders(),
+      });
+    const response = await doRequest();
+    return this.handleResponse<void>(response, () => this.delete(path));
   }
 
   streamChat(

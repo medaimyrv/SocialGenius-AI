@@ -117,7 +117,7 @@ export default function BusinessDetailPage() {
         </div>
         <div className="flex flex-wrap gap-2">
           <Link href={`/chat`}>
-            <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800 text-sm">
+            <Button variant="outline" className="border-slate-600 text-white hover:bg-slate-800 text-sm">
               Chatear
             </Button>
           </Link>
@@ -125,7 +125,7 @@ export default function BusinessDetailPage() {
             <>
               <Button
                 variant="outline"
-                className="border-slate-700 text-slate-300 hover:bg-slate-800 text-sm"
+                className="border-slate-600 text-white hover:bg-slate-800 text-sm"
                 onClick={() => setIsEditing(false)}
               >
                 Cancelar
@@ -142,7 +142,7 @@ export default function BusinessDetailPage() {
             <>
               <Button
                 variant="outline"
-                className="border-slate-700 text-slate-300 hover:bg-slate-800 text-sm"
+                className="border-slate-600 text-white hover:bg-slate-800 text-sm"
                 onClick={() => setIsEditing(true)}
               >
                 Editar

@@ -10,6 +10,7 @@ if TYPE_CHECKING:
     from app.models.business import Business
     from app.models.conversation import Conversation
     from app.models.subscription import Subscription
+    from app.models.user_activity import UserActivity
 
 
 class User(UUIDMixin, TimestampMixin, Base):
@@ -22,6 +23,8 @@ class User(UUIDMixin, TimestampMixin, Base):
     full_name: Mapped[str | None] = mapped_column(String(255))
     is_active: Mapped[bool] = mapped_column(default=True)
     is_verified: Mapped[bool] = mapped_column(default=False)
+    # "user" = usuario normal, "admin" = administrador
+    role: Mapped[str] = mapped_column(String(20), default="user", nullable=False)
 
     # Stripe
     stripe_customer_id: Mapped[str | None] = mapped_column(
@@ -37,4 +40,7 @@ class User(UUIDMixin, TimestampMixin, Base):
     )
     subscription: Mapped["Subscription | None"] = relationship(
         back_populates="user", uselist=False
+    )
+    activities: Mapped[list["UserActivity"]] = relationship(
+        back_populates="user", cascade="all, delete-orphan"
     )

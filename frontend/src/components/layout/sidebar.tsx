@@ -70,6 +70,25 @@ export function Sidebar({ onClose }: SidebarProps) {
             </Button>
           </Link>
         ))}
+
+        {/* Solo visible para admins */}
+        {user?.role === "admin" && (
+          <Link href="/admin" onClick={onClose}>
+            <Button
+              variant="ghost"
+              className={cn(
+                "w-full justify-start gap-3 text-slate-400 hover:bg-slate-800 hover:text-white",
+                pathname.startsWith("/admin") &&
+                  "bg-purple-600/10 text-purple-400 hover:bg-purple-600/20 hover:text-purple-300",
+              )}
+            >
+              <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+                <path strokeLinecap="round" strokeLinejoin="round" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+              </svg>
+              Admin
+            </Button>
+          </Link>
+        )}
       </nav>
 
       <Separator className="bg-slate-800" />

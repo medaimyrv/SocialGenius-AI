@@ -23,6 +23,7 @@ async def lifespan(app: FastAPI):
     import app.models.content_calendar  # noqa
     import app.models.content_piece  # noqa
     import app.models.subscription  # noqa
+    import app.models.user_activity  # noqa
 
     logger.info(f"Connecting to DB: {settings.DATABASE_URL[:30]}...")
     async with engine.begin() as conn:

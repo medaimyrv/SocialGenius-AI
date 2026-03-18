@@ -108,30 +108,30 @@ export default function BusinessDetailPage() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-white">{business.name}</h1>
+          <h1 className="text-xl font-bold text-white sm:text-2xl">{business.name}</h1>
           <Badge variant="outline" className="mt-1 border-slate-700 text-slate-400">
             {business.industry}
           </Badge>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link href={`/chat`}>
-            <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800">
-              Chatear sobre este negocio
+            <Button variant="outline" className="border-slate-700 text-slate-300 hover:bg-slate-800 text-sm">
+              Chatear
             </Button>
           </Link>
           {isEditing ? (
             <>
               <Button
                 variant="outline"
-                className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                className="border-slate-700 text-slate-300 hover:bg-slate-800 text-sm"
                 onClick={() => setIsEditing(false)}
               >
                 Cancelar
               </Button>
               <Button
-                className="bg-purple-600 hover:bg-purple-700"
+                className="bg-purple-600 hover:bg-purple-700 text-sm"
                 onClick={handleSave}
                 disabled={isSaving}
               >
@@ -142,13 +142,14 @@ export default function BusinessDetailPage() {
             <>
               <Button
                 variant="outline"
-                className="border-slate-700 text-slate-300 hover:bg-slate-800"
+                className="border-slate-700 text-slate-300 hover:bg-slate-800 text-sm"
                 onClick={() => setIsEditing(true)}
               >
                 Editar
               </Button>
               <Button
                 variant="destructive"
+                className="text-sm"
                 onClick={handleDelete}
                 disabled={isDeleting}
               >
@@ -193,7 +194,7 @@ export default function BusinessDetailPage() {
               <label className="text-sm text-slate-400">Descripción</label>
               {isEditing ? (
                 <textarea
-                  className="mt-1 border-slate-700 bg-slate-800 text-white"
+                  className="mt-1 w-full rounded-md border border-slate-700 bg-slate-800 px-3 py-2 text-sm text-white"
                   rows={3}
                   value={formData.description}
                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}

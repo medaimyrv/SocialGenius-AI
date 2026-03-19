@@ -15,6 +15,7 @@ from app.core.security import (
 )
 from app.models.subscription import Subscription
 from app.models.user import User
+from app.models.user_activity import UserActivity
 from app.schemas.auth import LoginRequest, RegisterRequest, TokenResponse
 
 
@@ -40,6 +41,7 @@ async def register_user(db: AsyncSession, data: RegisterRequest) -> User:
         usage_reset_date=datetime.now(UTC) + timedelta(days=30),
     )
     db.add(subscription)
+    db.add(UserActivity(user_id=user.id, event_type="register"))
 
     return user
 
@@ -53,6 +55,9 @@ async def login_user(db: AsyncSession, data: LoginRequest) -> TokenResponse:
 
     if not user.is_active:
         raise UnauthorizedError("Account is disabled")
+
+    db.add(UserActivity(user_id=user.id, event_type="login"))
+    await db.commit()
 
     return TokenResponse(
         access_token=create_access_token(user.id),

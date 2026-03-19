@@ -258,6 +258,10 @@ async def delete_user_hard(db: AsyncSession, user_id: UUID) -> AdminActionRespon
         return AdminActionResponse(ok=False, message="Usuario no encontrado")
 
     email = user.email
+    # Borrar suscripción explícitamente primero (evita error NOT NULL en cascade)
+    if user.subscription:
+        await db.delete(user.subscription)
+        await db.flush()
     await db.delete(user)
     await db.commit()
     return AdminActionResponse(ok=True, message=f"Usuario {email} eliminado permanentemente")

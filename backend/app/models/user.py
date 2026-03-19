@@ -39,7 +39,7 @@ class User(UUIDMixin, TimestampMixin, Base):
         back_populates="user", cascade="all, delete-orphan"
     )
     subscription: Mapped["Subscription | None"] = relationship(
-        back_populates="user", uselist=False
+        back_populates="user", uselist=False, cascade="all, delete-orphan"
     )
     activities: Mapped[list["UserActivity"]] = relationship(
         back_populates="user", cascade="all, delete-orphan"

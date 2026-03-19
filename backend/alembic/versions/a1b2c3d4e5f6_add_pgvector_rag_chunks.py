@@ -1,4 +1,4 @@
-"""add pgvector and rag_chunks table
+"""add rag_chunks table (sin pgvector, embeddings como JSON)
 
 Revision ID: a1b2c3d4e5f6
 Revises: bc70a3e09f0d
@@ -15,21 +15,15 @@ down_revision: Union[str, None] = "bc70a3e09f0d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
-EMBEDDING_DIM = 384
-
 
 def upgrade() -> None:
     conn = op.get_bind()
     dialect = conn.dialect.name
 
+    # Embeddings: JSONB en Postgres, TEXT en SQLite
     if dialect == "postgresql":
-        # Activar extensión pgvector (viene instalada en Railway por defecto)
-        conn.execute(sa.text("CREATE EXTENSION IF NOT EXISTS vector"))
-
-    # Columna de embedding: vector(384) en Postgres, TEXT en SQLite
-    if dialect == "postgresql":
-        from pgvector.sqlalchemy import Vector
-        embedding_col = sa.Column("embedding", Vector(EMBEDDING_DIM), nullable=True)
+        from sqlalchemy.dialects.postgresql import JSONB
+        embedding_col = sa.Column("embedding", JSONB(), nullable=True)
     else:
         embedding_col = sa.Column("embedding", sa.Text(), nullable=True)
 
@@ -44,24 +38,13 @@ def upgrade() -> None:
         sa.Column("role", sa.String(length=20), nullable=True),
         sa.Column("content", sa.Text(), nullable=False),
         embedding_col,
-        sa.Column("created_at", sa.DateTime(), nullable=False),
-        sa.Column("updated_at", sa.DateTime(), nullable=False),
+        sa.Column("created_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
+        sa.Column("updated_at", sa.DateTime(timezone=True), server_default=sa.text("(CURRENT_TIMESTAMP)"), nullable=False),
         sa.ForeignKeyConstraint(["business_id"], ["businesses.id"], ondelete="CASCADE"),
         sa.PrimaryKeyConstraint("id"),
     )
     op.create_index("ix_rag_chunks_business_id", "rag_chunks", ["business_id"])
-    op.create_index(
-        "ix_rag_chunks_business_source",
-        "rag_chunks",
-        ["business_id", "source_type"],
-    )
-
-    # Índice HNSW de pgvector para búsqueda por similitud coseno (solo Postgres)
-    if dialect == "postgresql":
-        conn.execute(sa.text(
-            "CREATE INDEX ix_rag_chunks_embedding_hnsw "
-            "ON rag_chunks USING hnsw (embedding vector_cosine_ops)"
-        ))
+    op.create_index("ix_rag_chunks_business_source", "rag_chunks", ["business_id", "source_type"])
 
 
 def downgrade() -> None:

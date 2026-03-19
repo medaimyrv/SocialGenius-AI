@@ -1,30 +1,28 @@
 """
 Modelo RagChunk — almacena chunks de texto con embeddings vectoriales.
 
-Compatible con:
-- PostgreSQL + pgvector (producción / Railway): columna nativa Vector(384)
-- SQLite (desarrollo local): embedding guardado como JSON text
+Embeddings guardados como:
+- JSONB en PostgreSQL (Postgres nativo, consultas eficientes)
+- TEXT (JSON) en SQLite (desarrollo local)
 
-Fuentes:
-- source_type="document" → chunks de PDFs/TXTs subidos por el usuario
-- source_type="message"  → mensajes del historial de conversaciones
+La búsqueda por similitud coseno se hace siempre en Python.
 """
-import json
 import uuid
 
 from sqlalchemy import ForeignKey, Index, Integer, String, Text
 from sqlalchemy.orm import Mapped, mapped_column
 from sqlalchemy.types import TypeDecorator
+import json
 
 from app.models.base import Base, TimestampMixin, UUIDMixin
 
-EMBEDDING_DIM = 384  # all-MiniLM-L6-v2
+EMBEDDING_DIM = 384  # BAAI/bge-small-en-v1.5
 
 
-class VectorType(TypeDecorator):
+class EmbeddingType(TypeDecorator):
     """
-    TypeDecorator que usa pgvector.Vector en PostgreSQL y Text (JSON) en SQLite.
-    Transparente para el resto del código.
+    Guarda embeddings como JSONB en Postgres o TEXT en SQLite.
+    Transparente para el resto del código: acepta y devuelve list[float].
     """
 
     impl = Text
@@ -32,19 +30,17 @@ class VectorType(TypeDecorator):
 
     def load_dialect_impl(self, dialect):
         if dialect.name == "postgresql":
-            from pgvector.sqlalchemy import Vector
-            return dialect.type_descriptor(Vector(EMBEDDING_DIM))
+            from sqlalchemy.dialects.postgresql import JSONB
+            return dialect.type_descriptor(JSONB())
         return dialect.type_descriptor(Text())
 
     def process_bind_param(self, value, dialect):
         if value is None:
             return None
         if dialect.name == "postgresql":
-            # pgvector acepta lista de floats directamente
-            if hasattr(value, "tolist"):
-                return value.tolist()
-            return value
-        # SQLite: serializar como JSON
+            # JSONB acepta lista Python directamente
+            return value if isinstance(value, list) else list(value)
+        # SQLite: serializar como JSON string
         if hasattr(value, "tolist"):
             value = value.tolist()
         return json.dumps(value)
@@ -53,9 +49,7 @@ class VectorType(TypeDecorator):
         if value is None:
             return None
         if dialect.name == "postgresql":
-            # pgvector devuelve lista de floats directamente
-            return list(value) if not isinstance(value, list) else value
-        # SQLite: deserializar JSON
+            return value  # JSONB ya devuelve lista
         if isinstance(value, str):
             return json.loads(value)
         return value
@@ -77,10 +71,9 @@ class RagChunk(UUIDMixin, TimestampMixin, Base):
     role: Mapped[str | None] = mapped_column(String(20))  # "user" | "assistant"
     # Contenido textual del chunk
     content: Mapped[str] = mapped_column(Text, nullable=False)
-    # Vector de embedding (384 dims)
-    embedding: Mapped[list | None] = mapped_column(VectorType, nullable=True)
+    # Vector de embedding (lista de floats)
+    embedding: Mapped[list | None] = mapped_column(EmbeddingType, nullable=True)
 
     __table_args__ = (
-        # Índice para filtrar por negocio + tipo de fuente
         Index("ix_rag_chunks_business_source", "business_id", "source_type"),
     )

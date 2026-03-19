@@ -71,6 +71,23 @@ export function Sidebar({ onClose }: SidebarProps) {
           </Link>
         ))}
 
+        {/* Acerca de */}
+        <Link href="/about" onClick={onClose}>
+          <Button
+            variant="ghost"
+            className={cn(
+              "w-full justify-start gap-3 text-slate-400 hover:bg-slate-800 hover:text-white",
+              pathname.startsWith("/about") &&
+                "bg-purple-600/10 text-purple-400 hover:bg-purple-600/20 hover:text-purple-300",
+            )}
+          >
+            <svg className="h-5 w-5 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            Acerca de
+          </Button>
+        </Link>
+
         {/* Solo visible para admins */}
         {user?.role === "admin" && (
           <Link href="/admin" onClick={onClose}>

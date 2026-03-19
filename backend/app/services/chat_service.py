@@ -17,6 +17,7 @@ from app.models.content_calendar import ContentCalendar
 from app.models.content_piece import ContentPiece
 from app.models.conversation import Conversation
 from app.models.message import Message
+from app.services.rag_service import rag_service
 
 logger = logging.getLogger(__name__)
 
@@ -50,11 +51,31 @@ async def send_message_and_stream(
         )
         business = biz_result.scalar_one_or_none()
 
+    # Recuperar contexto RAG si el negocio está vinculado
+    rag_context = ""
+    if conversation.business_id:
+        try:
+            rag_context = rag_service.retrieve_context(
+                business_id=str(conversation.business_id),
+                query=content,
+            )
+        except Exception as e:
+            logger.warning(f"RAG retrieval failed (non-fatal): {e}")
+
     # Build message history for AI (from previously loaded messages)
     messages_for_ai = [
         {"role": msg.role.value, "content": msg.content}
         for msg in conversation.messages
     ]
+
+    # Inyectar contexto RAG como mensaje de sistema si hay resultados
+    if rag_context:
+        rag_injection = (
+            f"[CONTEXTO RELEVANTE RECUPERADO]\n{rag_context}\n"
+            "[Usa este contexto para dar respuestas más personalizadas y precisas.]"
+        )
+        messages_for_ai.insert(0, {"role": "system", "content": rag_injection})
+
     # Add current user message
     messages_for_ai.append({"role": "user", "content": content})
 
@@ -104,6 +125,24 @@ async def send_message_and_stream(
         )
         db.add(assistant_message)
         await db.flush()
+
+        # Indexar mensajes en RAG para memoria futura
+        if conversation.business_id:
+            try:
+                rag_service.index_message(
+                    business_id=str(conversation.business_id),
+                    conversation_id=str(conversation.id),
+                    role="user",
+                    content=content,
+                )
+                rag_service.index_message(
+                    business_id=str(conversation.business_id),
+                    conversation_id=str(conversation.id),
+                    role="assistant",
+                    content=full_response[:1000],  # limitar tamaño indexado
+                )
+            except Exception as e:
+                logger.warning(f"RAG indexing failed (non-fatal): {e}")
 
         # Auto-create calendar record for calendar conversations
         if (

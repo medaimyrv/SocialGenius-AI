@@ -1,10 +1,10 @@
 """
 RAG Service - Retrieval Augmented Generation
-Usa ChromaDB como vector store y sentence-transformers para embeddings.
+Usa ChromaDB como vector store con embeddings ONNX nativos (sin torch).
 
 Colecciones:
-- messages_{business_id}   : historial de conversaciones del negocio
-- documents_{business_id}  : documentos subidos por el usuario
+- msgs_{business_id}  : historial de conversaciones del negocio
+- docs_{business_id}  : documentos subidos por el usuario
 """
 
 import logging
@@ -13,19 +13,18 @@ from pathlib import Path
 
 import chromadb
 from chromadb.config import Settings
-from sentence_transformers import SentenceTransformer
+from chromadb.utils.embedding_functions import ONNXMiniLM_L6_V2
 
 logger = logging.getLogger(__name__)
 
 CHROMA_PATH = Path("./chroma_db")
-EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
-TOP_K = 5  # Número de fragmentos relevantes a recuperar
+TOP_K = 5
 
 
 class RAGService:
     def __init__(self):
         self._client: chromadb.PersistentClient | None = None
-        self._embedder: SentenceTransformer | None = None
+        self._ef = ONNXMiniLM_L6_V2()  # Embeddings ONNX, sin torch, muy ligero
 
     def _get_client(self) -> chromadb.PersistentClient:
         if self._client is None:
@@ -36,24 +35,17 @@ class RAGService:
             )
         return self._client
 
-    def _get_embedder(self) -> SentenceTransformer:
-        if self._embedder is None:
-            logger.info(f"Loading embedding model: {EMBEDDING_MODEL}")
-            self._embedder = SentenceTransformer(EMBEDDING_MODEL)
-        return self._embedder
-
-    def _embed(self, texts: list[str]) -> list[list[float]]:
-        return self._get_embedder().encode(texts, convert_to_numpy=True).tolist()
-
     def _messages_collection(self, business_id: str):
         return self._get_client().get_or_create_collection(
             name=f"msgs_{business_id.replace('-', '')}",
+            embedding_function=self._ef,
             metadata={"hnsw:space": "cosine"},
         )
 
     def _documents_collection(self, business_id: str):
         return self._get_client().get_or_create_collection(
             name=f"docs_{business_id.replace('-', '')}",
+            embedding_function=self._ef,
             metadata={"hnsw:space": "cosine"},
         )
 
@@ -63,10 +55,8 @@ class RAGService:
         """Indexa un mensaje en el vector store del negocio."""
         try:
             col = self._messages_collection(business_id)
-            doc_id = str(uuid.uuid4())
             col.add(
-                ids=[doc_id],
-                embeddings=self._embed([content]),
+                ids=[str(uuid.uuid4())],
                 documents=[content],
                 metadatas=[{
                     "business_id": business_id,
@@ -86,10 +76,8 @@ class RAGService:
             return 0
         try:
             col = self._documents_collection(business_id)
-            ids = [f"{document_id}_{i}" for i in range(len(chunks))]
             col.add(
-                ids=ids,
-                embeddings=self._embed(chunks),
+                ids=[f"{document_id}_{i}" for i in range(len(chunks))],
                 documents=chunks,
                 metadatas=[{
                     "business_id": business_id,
@@ -122,18 +110,19 @@ class RAGService:
         # 1. Mensajes anteriores relevantes
         try:
             msg_col = self._messages_collection(business_id)
-            if msg_col.count() > 0:
+            count = msg_col.count()
+            if count > 0:
                 results = msg_col.query(
-                    query_embeddings=self._embed([query]),
-                    n_results=min(TOP_K, msg_col.count()),
+                    query_texts=[query],
+                    n_results=min(TOP_K, count),
                 )
                 docs = results.get("documents", [[]])[0]
                 metas = results.get("metadatas", [[]])[0]
                 if docs:
                     history = []
                     for doc, meta in zip(docs, metas):
-                        role = "Usuario" if meta.get("role") == "user" else "Asistente"
-                        history.append(f"{role}: {doc}")
+                        label = "Usuario" if meta.get("role") == "user" else "Asistente"
+                        history.append(f"{label}: {doc}")
                     parts.append("### Conversaciones anteriores relevantes:\n" + "\n".join(history))
         except Exception as e:
             logger.warning(f"Error retrieving message context: {e}")
@@ -141,10 +130,11 @@ class RAGService:
         # 2. Documentos subidos relevantes
         try:
             doc_col = self._documents_collection(business_id)
-            if doc_col.count() > 0:
+            count = doc_col.count()
+            if count > 0:
                 results = doc_col.query(
-                    query_embeddings=self._embed([query]),
-                    n_results=min(TOP_K, doc_col.count()),
+                    query_texts=[query],
+                    n_results=min(TOP_K, count),
                 )
                 docs = results.get("documents", [[]])[0]
                 metas = results.get("metadatas", [[]])[0]

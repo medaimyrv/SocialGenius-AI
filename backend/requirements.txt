@@ -1,6 +1,5 @@
 aiosqlite==0.22.1
 chromadb==1.5.5
-sentence-transformers==5.3.0
 pypdf==6.9.1
 alembic==1.18.4
 annotated-doc==0.0.4

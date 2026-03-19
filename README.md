@@ -144,11 +144,12 @@ Usuario sube PDF / TXT (máx 10 MB)
 
 | Parámetro | Valor | Descripción |
 |---|---|---|
-| `CHUNK_SIZE` | 500 palabras | Tamaño máximo por chunk |
-| `CHUNK_OVERLAP` | 50 palabras | Solapamiento entre chunks consecutivos |
+| `CHUNK_MAX_WORDS` | 300 palabras | Máximo de palabras por chunk (agrupando oraciones completas) |
+| `CHUNK_OVERLAP_SENTENCES` | 2 oraciones | Oraciones que se solapan entre chunks consecutivos |
 | `TOP_K` | 5 | Chunks más relevantes recuperados por búsqueda |
-| Mínimo de chunk | 20 caracteres | Chunks más cortos se descartan |
-| Stride efectivo | 450 palabras | Avance entre el inicio de cada chunk |
+| Mínimo de oración | 15 caracteres | Fragmentos más cortos se descartan |
+
+**Estrategia de chunking:** se divide el texto en oraciones (respetando `.`, `!`, `?` como límites) y luego se agrupan hasta llenar `CHUNK_MAX_WORDS`. El solapamiento se hace a nivel de oración entera, nunca en medio de una frase. Esto preserva el contexto semántico completo en cada chunk.
 
 ### Almacenamiento de vectores
 

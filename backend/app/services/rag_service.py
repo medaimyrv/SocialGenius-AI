@@ -4,6 +4,7 @@ RAG Service — Retrieval Augmented Generation.
 Embeddings: HuggingFace Inference API (sentence-transformers/all-MiniLM-L6-v2, 384 dims)
 Vector store: tabla rag_chunks en Postgres/SQLite
 Búsqueda: similitud coseno calculada en Python (sin pgvector)
+Chunking: por oraciones (respeta límites semánticos, nunca parte una frase)
 
 Fuentes indexadas:
   - "document" → chunks de PDFs/TXTs subidos por el usuario
@@ -11,6 +12,7 @@ Fuentes indexadas:
 """
 import logging
 import math
+import re
 import uuid
 from typing import Literal
 
@@ -24,8 +26,8 @@ from app.models.rag_chunk import RagChunk
 logger = logging.getLogger(__name__)
 
 TOP_K = 5
-CHUNK_SIZE = 500
-CHUNK_OVERLAP = 50
+CHUNK_MAX_WORDS = 300   # máximo de palabras por chunk (agrupando oraciones)
+CHUNK_OVERLAP_SENTENCES = 2  # oraciones que se solapan entre chunks consecutivos
 
 HF_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
 HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_EMBEDDING_MODEL}"
@@ -59,17 +61,63 @@ def _cosine_similarity(a: list[float], b: list[float]) -> float:
     return dot / (norm_a * norm_b)
 
 
-# ── Chunking ─────────────────────────────────────────────────────────────────
+# ── Chunking por oraciones ────────────────────────────────────────────────────
+
+def _split_sentences(text_: str) -> list[str]:
+    """
+    Divide el texto en oraciones respetando límites naturales del lenguaje.
+    Maneja puntos en abreviaturas, números decimales y puntos suspensivos.
+    """
+    # Normalizar saltos de línea múltiples como separadores de párrafo
+    text_ = re.sub(r"\n{2,}", " <PARA> ", text_)
+    text_ = re.sub(r"\n", " ", text_)
+
+    # Separar en oraciones: punto/exclamación/interrogación seguido de espacio y mayúscula
+    # Excluye: números decimales (3.5), abreviaturas cortas (Sr., Dr.)
+    sentences = re.split(r"(?<=[.!?])\s+(?=[A-ZÁÉÍÓÚÑ\"])|(?<=<PARA>)\s*", text_)
+
+    result = []
+    for s in sentences:
+        s = s.replace("<PARA>", "").strip()
+        if len(s) > 15:  # ignorar fragmentos muy cortos
+            result.append(s)
+    return result
+
 
 def _chunk_text(text_: str) -> list[str]:
-    words = text_.split()
-    chunks, start = [], 0
-    while start < len(words):
-        end = min(start + CHUNK_SIZE, len(words))
-        chunk = " ".join(words[start:end])
-        if len(chunk.strip()) > 20:
-            chunks.append(chunk)
-        start += CHUNK_SIZE - CHUNK_OVERLAP
+    """
+    Agrupa oraciones en chunks sin superar CHUNK_MAX_WORDS palabras.
+    El solapamiento se hace a nivel de oración (CHUNK_OVERLAP_SENTENCES),
+    preservando siempre el contexto semántico completo.
+    """
+    sentences = _split_sentences(text_)
+    if not sentences:
+        return []
+
+    chunks: list[str] = []
+    current: list[str] = []
+    current_words = 0
+
+    i = 0
+    while i < len(sentences):
+        sentence = sentences[i]
+        word_count = len(sentence.split())
+
+        if current_words + word_count > CHUNK_MAX_WORDS and current:
+            # Guardar chunk actual
+            chunks.append(" ".join(current))
+            # Overlap: conservar las últimas N oraciones para el siguiente chunk
+            overlap = current[-CHUNK_OVERLAP_SENTENCES:]
+            current = overlap
+            current_words = sum(len(s.split()) for s in current)
+        else:
+            current.append(sentence)
+            current_words += word_count
+            i += 1
+
+    if current:
+        chunks.append(" ".join(current))
+
     return chunks
 
 

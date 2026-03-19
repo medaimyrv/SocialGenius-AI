@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
@@ -16,6 +16,14 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { api } from "@/lib/api-client";
 import type { Business } from "@/types";
 
+interface Document {
+  id: string;
+  filename: string;
+  content_type: string;
+  chunk_count: number;
+  created_at: string;
+}
+
 export default function BusinessDetailPage() {
   const params = useParams();
   const router = useRouter();
@@ -26,6 +34,12 @@ export default function BusinessDetailPage() {
   const [isEditing, setIsEditing] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+
+  // Documentos RAG
+  const [documents, setDocuments] = useState<Document[]>([]);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadError, setUploadError] = useState("");
+  const fileInputRef = useRef<HTMLInputElement>(null);
   const [formData, setFormData] = useState({
     name: "",
     industry: "",
@@ -55,7 +69,48 @@ export default function BusinessDetailPage() {
       })
       .catch(console.error)
       .finally(() => setIsLoading(false));
+
+    api.get<Document[]>(`/documents/${businessId}`)
+      .then(setDocuments)
+      .catch(() => {});
   }, [businessId]);
+
+  const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setIsUploading(true);
+    setUploadError("");
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+      const token = localStorage.getItem("access_token");
+      const res = await fetch(
+        `${process.env.NEXT_PUBLIC_API_URL}/documents/${businessId}`,
+        { method: "POST", headers: { Authorization: `Bearer ${token}` }, body: formData }
+      );
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.detail || "Error al subir");
+      }
+      const newDoc = await res.json();
+      setDocuments((prev) => [...prev, { ...newDoc, created_at: new Date().toISOString() }]);
+    } catch (err: unknown) {
+      setUploadError(err instanceof Error ? err.message : "Error al subir");
+    } finally {
+      setIsUploading(false);
+      if (fileInputRef.current) fileInputRef.current.value = "";
+    }
+  };
+
+  const handleDeleteDocument = async (docId: string) => {
+    if (!confirm("¿Eliminar este documento del RAG?")) return;
+    try {
+      await api.delete(`/documents/${businessId}/${docId}`);
+      setDocuments((prev) => prev.filter((d) => d.id !== docId));
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleSave = async () => {
     setIsSaving(true);
@@ -239,6 +294,74 @@ export default function BusinessDetailPage() {
                 </p>
               )}
             </div>
+          </CardContent>
+        </Card>
+
+        {/* Documentos RAG */}
+        <Card className="border-slate-800 bg-slate-900 md:col-span-2">
+          <CardHeader>
+            <div className="flex items-center justify-between">
+              <div>
+                <CardTitle className="text-white">Documentos RAG</CardTitle>
+                <p className="mt-1 text-xs text-slate-500">
+                  Sube PDFs o TXTs — el asistente los usará como contexto en el chat
+                </p>
+              </div>
+              <div>
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept=".pdf,.txt,.md"
+                  className="hidden"
+                  onChange={handleUpload}
+                />
+                <Button
+                  size="sm"
+                  className="bg-purple-600 hover:bg-purple-700 text-xs"
+                  onClick={() => fileInputRef.current?.click()}
+                  disabled={isUploading}
+                >
+                  {isUploading ? "Subiendo..." : "+ Subir documento"}
+                </Button>
+              </div>
+            </div>
+            {uploadError && (
+              <p className="mt-2 text-xs text-red-400">{uploadError}</p>
+            )}
+          </CardHeader>
+          <CardContent>
+            {documents.length === 0 ? (
+              <p className="text-sm text-slate-500">
+                No hay documentos. Sube una guía de marca, lista de productos o FAQ.
+              </p>
+            ) : (
+              <div className="space-y-2">
+                {documents.map((doc) => (
+                  <div
+                    key={doc.id}
+                    className="flex items-center justify-between rounded-md border border-slate-800 bg-slate-950 px-3 py-2"
+                  >
+                    <div className="flex items-center gap-2 min-w-0">
+                      <span className="text-lg">
+                        {doc.content_type === "application/pdf" ? "📄" : "📝"}
+                      </span>
+                      <div className="min-w-0">
+                        <p className="truncate text-sm text-white">{doc.filename}</p>
+                        <p className="text-xs text-slate-500">{doc.chunk_count} fragmentos indexados</p>
+                      </div>
+                    </div>
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      className="shrink-0 text-slate-500 hover:text-red-400"
+                      onClick={() => handleDeleteDocument(doc.id)}
+                    >
+                      ✕
+                    </Button>
+                  </div>
+                ))}
+              </div>
+            )}
           </CardContent>
         </Card>
 

@@ -17,6 +17,7 @@ from app.models.content_calendar import ContentCalendar
 from app.models.content_piece import ContentPiece
 from app.models.conversation import Conversation
 from app.models.message import Message
+from app.models.user_activity import UserActivity
 from app.services import rag_service
 
 logger = logging.getLogger(__name__)
@@ -87,6 +88,8 @@ async def send_message_and_stream(
         content=content,
     )
     db.add(user_message)
+    db.add(UserActivity(user_id=user_id, event_type="send_message",
+                        metadata_={"conversation_id": str(conversation_id)}))
     await db.flush()
 
     # Stream AI response
@@ -368,6 +371,8 @@ async def _save_calendar_from_response(
             status="draft",
         )
         db.add(calendar)
+        db.add(UserActivity(user_id=conversation.user_id, event_type="calendar_created",
+                            metadata_={"calendar_id": str(calendar.id), "business_id": str(conversation.business_id)}))
         await db.flush()
         logger.info(f"Calendar created: {calendar.id}")
 

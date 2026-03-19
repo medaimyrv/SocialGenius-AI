@@ -7,6 +7,7 @@ from sqlalchemy.orm import selectinload
 from app.core.constants import ConversationType
 from app.core.exceptions import ForbiddenError, NotFoundError
 from app.models.conversation import Conversation
+from app.models.user_activity import UserActivity
 from app.schemas.conversation import ConversationCreate, ConversationUpdate
 
 
@@ -20,6 +21,8 @@ async def create_conversation(
         conversation_type=data.conversation_type,
     )
     db.add(conversation)
+    db.add(UserActivity(user_id=user_id, event_type="new_conversation",
+                        metadata_={"type": data.conversation_type.value if data.conversation_type else None}))
     await db.flush()
     return conversation
 

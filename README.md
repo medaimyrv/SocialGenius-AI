@@ -125,12 +125,13 @@ Usuario sube PDF / TXT (máx 10 MB)
    (pypdf para PDF, lectura directa para TXT)
            │
            ▼
-   Chunking por palabras
-   (ventana deslizante, 500 palabras, solapamiento 50)
+   Chunking por oraciones
+   (agrupación semántica, máx 300 palabras, overlap 2 oraciones)
            │
            ▼
    HuggingFace Embedding API
-   (sentence-transformers/all-MiniLM-L6-v2 → vector 384 dims)
+   (intfloat/multilingual-e5-small → vector 384 dims)
+   prefijo "passage: " al indexar / "query: " al buscar
            │
            ▼
    Almacenamiento en tabla rag_chunks

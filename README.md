@@ -79,11 +79,18 @@ Todos los modelos se consumen a través de la **HuggingFace Inference API** (sin
 
 | Propiedad | Valor |
 |---|---|
-| **Modelo** | `sentence-transformers/all-MiniLM-L6-v2` |
+| **Modelo** | `intfloat/multilingual-e5-small` |
 | **Proveedor** | HuggingFace Inference API |
 | **Dimensiones del vector** | 384 |
 | **Método de llamada** | HTTP POST async via `httpx` |
-| **Endpoint** | `https://api-inference.huggingface.co/models/sentence-transformers/all-MiniLM-L6-v2` |
+| **Endpoint** | `https://api-inference.huggingface.co/models/intfloat/multilingual-e5-small` |
+
+Modelo entrenado específicamente en texto multilingüe (incluye español), con mejor precisión semántica que alternativas en inglés. Requiere el protocolo de prefijos E5:
+
+| Contexto | Prefijo aplicado |
+|---|---|
+| Indexar documentos y mensajes | `passage: <texto>` |
+| Consulta de búsqueda del usuario | `query: <texto>` |
 
 > No se instalan modelos de embeddings localmente. Ninguna dependencia ML pesada (torch, ONNX, CUDA) en el servidor.
 

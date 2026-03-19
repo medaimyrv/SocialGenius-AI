@@ -1,7 +1,11 @@
 """
 RAG Service — Retrieval Augmented Generation.
 
-Embeddings: HuggingFace Inference API (sentence-transformers/all-MiniLM-L6-v2, 384 dims)
+Embeddings: HuggingFace Inference API (intfloat/multilingual-e5-small, 384 dims)
+  - Modelo multilingüe entrenado en español → mejor precisión semántica
+  - Requiere prefijos obligatorios del protocolo E5:
+      "passage: <texto>"  → al indexar documentos y mensajes
+      "query: <texto>"    → al generar el embedding de búsqueda
 Vector store: tabla rag_chunks en Postgres/SQLite
 Búsqueda: similitud coseno calculada en Python (sin pgvector)
 Chunking: por oraciones (respeta límites semánticos, nunca parte una frase)
@@ -29,25 +33,38 @@ TOP_K = 5
 CHUNK_MAX_WORDS = 300   # máximo de palabras por chunk (agrupando oraciones)
 CHUNK_OVERLAP_SENTENCES = 2  # oraciones que se solapan entre chunks consecutivos
 
-HF_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+HF_EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
 HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_EMBEDDING_MODEL}"
 
 # ── Embeddings vía HuggingFace Inference API ──────────────────────────────────
+# multilingual-e5 exige prefijos para distinguir rol semántico:
+#   "passage: <texto>"  → contenido a indexar (documentos, mensajes)
+#   "query: <texto>"    → consulta de búsqueda del usuario
 
-async def _embed(texts: list[str]) -> list[list[float]]:
-    """Genera embeddings llamando a la HuggingFace Inference API."""
+async def _embed(texts: list[str], is_query: bool = False) -> list[list[float]]:
+    """
+    Genera embeddings con multilingual-e5-small.
+    is_query=True  → prefija con "query: "   (para búsquedas)
+    is_query=False → prefija con "passage: " (para indexar contenido)
+    """
+    prefix = "query: " if is_query else "passage: "
+    prefixed = [prefix + t for t in texts]
     headers = {"Authorization": f"Bearer {settings.HUGGINGFACE_API_KEY}"}
     async with httpx.AsyncClient(timeout=30.0) as client:
-        resp = await client.post(HF_API_URL, headers=headers, json={"inputs": texts})
+        resp = await client.post(HF_API_URL, headers=headers, json={"inputs": prefixed})
         resp.raise_for_status()
         result = resp.json()
-    # La API devuelve lista de vectores directamente
     return result
 
 
-async def _embed_one(text: str) -> list[float]:
-    embeddings = await _embed([text])
-    return embeddings[0]
+async def _embed_passages(texts: list[str]) -> list[list[float]]:
+    """Embeddings para contenido a indexar (documentos, mensajes)."""
+    return await _embed(texts, is_query=False)
+
+
+async def _embed_query(text: str) -> list[float]:
+    """Embedding para una consulta de búsqueda."""
+    return (await _embed([text], is_query=True))[0]
 
 
 # ── Similitud coseno ──────────────────────────────────────────────────────────
@@ -135,7 +152,7 @@ async def index_document(
     if not chunks:
         return 0
     try:
-        embeddings = await _embed(chunks)
+        embeddings = await _embed_passages(chunks)
         rows = [
             RagChunk(
                 id=uuid.uuid4(),
@@ -166,7 +183,7 @@ async def index_message(
 ) -> None:
     """Indexa un mensaje para recuperación futura."""
     try:
-        embedding = await _embed_one(content)
+        embedding = (await _embed_passages([content]))[0]
         db.add(RagChunk(
             id=uuid.uuid4(),
             business_id=uuid.UUID(business_id),
@@ -210,7 +227,7 @@ async def retrieve_context(
     Retorna texto formateado listo para inyectar en el prompt de la IA.
     """
     try:
-        query_embedding = await _embed_one(query)
+        query_embedding = await _embed_query(query)
     except Exception as e:
         logger.warning(f"Error generating query embedding: {e}")
         return ""

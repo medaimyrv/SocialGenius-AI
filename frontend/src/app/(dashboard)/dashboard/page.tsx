@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import {
   Card,
   CardContent,
@@ -56,7 +55,6 @@ const STEPS = [
 
 export default function DashboardPage() {
   const { user } = useAuth();
-  const router = useRouter();
   const [businesses, setBusinesses] = useState<Business[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -247,7 +245,6 @@ export default function DashboardPage() {
         <CardContent className="space-y-3">
           {STEPS.map((step, idx) => {
             const isDone = step.number === 1 && hasBusinesses;
-            const isActive = !isDone;
 
             return (
               <div

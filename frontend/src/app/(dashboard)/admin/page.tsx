@@ -70,6 +70,7 @@ export default function AdminPage() {
   const [totalPages, setTotalPages] = useState(1);
   const [total, setTotal] = useState(0);
   const [actionLoading, setActionLoading] = useState<string | null>(null);
+  const [actionError, setActionError] = useState<string | null>(null);
 
   // Solo admins pueden entrar
   useEffect(() => {
@@ -120,9 +121,12 @@ export default function AdminPage() {
     const label = isActive ? "desactivar" : "reactivar";
     if (!confirm(`¿Seguro que quieres ${label} este usuario?`)) return;
     setActionLoading(userId + action);
+    setActionError(null);
     try {
       await api.patch(`/admin/users/${userId}/${action}`, {});
       await fetchUsers();
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Error al realizar la acción");
     } finally {
       setActionLoading(null);
     }
@@ -136,9 +140,12 @@ export default function AdminPage() {
     )
       return;
     setActionLoading(userId + "delete");
+    setActionError(null);
     try {
       await api.delete(`/admin/users/${userId}`);
-      await fetchUsers();
+      setUsers((prev) => prev.filter((u) => u.id !== userId));
+    } catch (err: unknown) {
+      setActionError(err instanceof Error ? err.message : "Error al eliminar usuario");
     } finally {
       setActionLoading(null);
     }
@@ -240,6 +247,12 @@ export default function AdminPage() {
               Buscar
             </Button>
           </div>
+
+          {actionError && (
+            <div className="rounded-md border border-red-500/40 bg-red-500/10 px-4 py-2 text-sm text-red-400">
+              {actionError}
+            </div>
+          )}
 
           {/* Tabla */}
           <Card className="border-slate-800 bg-slate-900">

@@ -1,5 +1,6 @@
 from collections.abc import AsyncGenerator
 
+from sqlalchemy import event
 from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 from app.config import settings
@@ -8,7 +9,15 @@ def _build_engine():
     url = settings.DATABASE_URL
     # SQLite needs check_same_thread=False; PostgreSQL doesn't support it
     if url.startswith("sqlite"):
-        return create_async_engine(url, echo=False, connect_args={"check_same_thread": False})
+        engine = create_async_engine(url, echo=False, connect_args={"check_same_thread": False})
+
+        @event.listens_for(engine.sync_engine, "connect")
+        def set_sqlite_pragma(dbapi_conn, _connection_record):
+            cursor = dbapi_conn.cursor()
+            cursor.execute("PRAGMA foreign_keys=ON")
+            cursor.close()
+
+        return engine
     # Convert postgres:// to postgresql+asyncpg:// if Railway provides the old format
     if url.startswith("postgres://"):
         url = url.replace("postgres://", "postgresql+asyncpg://", 1)

@@ -13,7 +13,7 @@ from datetime import datetime
 from math import ceil
 from uuid import UUID
 
-from sqlalchemy import delete, func, select
+from sqlalchemy import func, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -242,7 +242,16 @@ async def delete_user_hard(db: AsyncSession, user_id: UUID) -> AdminActionRespon
     ADVERTENCIA: Esta acción es irreversible.
     """
     user = (
-        await db.execute(select(User).where(User.id == user_id))
+        await db.execute(
+            select(User)
+            .where(User.id == user_id)
+            .options(
+                selectinload(User.businesses),
+                selectinload(User.conversations),
+                selectinload(User.activities),
+                selectinload(User.subscription),
+            )
+        )
     ).scalar_one_or_none()
 
     if not user:

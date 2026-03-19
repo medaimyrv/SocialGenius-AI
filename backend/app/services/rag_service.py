@@ -1,7 +1,7 @@
 """
 RAG Service — Retrieval Augmented Generation.
 
-Embeddings: fastembed (ONNX BAAI/bge-small-en-v1.5, 384 dims, sin torch)
+Embeddings: HuggingFace Inference API (sentence-transformers/all-MiniLM-L6-v2, 384 dims)
 Vector store: tabla rag_chunks en Postgres/SQLite
 Búsqueda: similitud coseno calculada en Python (sin pgvector)
 
@@ -14,9 +14,11 @@ import math
 import uuid
 from typing import Literal
 
+import httpx
 from sqlalchemy import delete, select
 from sqlalchemy.ext.asyncio import AsyncSession
 
+from app.config import settings
 from app.models.rag_chunk import RagChunk
 
 logger = logging.getLogger(__name__)
@@ -25,22 +27,25 @@ TOP_K = 5
 CHUNK_SIZE = 500
 CHUNK_OVERLAP = 50
 
-# ── Modelo de embeddings ──────────────────────────────────────────────────────
+HF_EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_EMBEDDING_MODEL}"
 
-_embedding_model = None
+# ── Embeddings vía HuggingFace Inference API ──────────────────────────────────
+
+async def _embed(texts: list[str]) -> list[list[float]]:
+    """Genera embeddings llamando a la HuggingFace Inference API."""
+    headers = {"Authorization": f"Bearer {settings.HUGGINGFACE_API_KEY}"}
+    async with httpx.AsyncClient(timeout=30.0) as client:
+        resp = await client.post(HF_API_URL, headers=headers, json={"inputs": texts})
+        resp.raise_for_status()
+        result = resp.json()
+    # La API devuelve lista de vectores directamente
+    return result
 
 
-def _embed(texts: list[str]) -> list[list[float]]:
-    """Genera embeddings con fastembed (se descarga el modelo la primera vez)."""
-    global _embedding_model
-    if _embedding_model is None:
-        from fastembed import TextEmbedding
-        _embedding_model = TextEmbedding(model_name="BAAI/bge-small-en-v1.5")
-    return [v.tolist() for v in _embedding_model.embed(texts)]
-
-
-def _embed_one(text: str) -> list[float]:
-    return _embed([text])[0]
+async def _embed_one(text: str) -> list[float]:
+    embeddings = await _embed([text])
+    return embeddings[0]
 
 
 # ── Similitud coseno ──────────────────────────────────────────────────────────
@@ -82,7 +87,7 @@ async def index_document(
     if not chunks:
         return 0
     try:
-        embeddings = _embed(chunks)
+        embeddings = await _embed(chunks)
         rows = [
             RagChunk(
                 id=uuid.uuid4(),
@@ -113,7 +118,7 @@ async def index_message(
 ) -> None:
     """Indexa un mensaje para recuperación futura."""
     try:
-        embedding = _embed_one(content)
+        embedding = await _embed_one(content)
         db.add(RagChunk(
             id=uuid.uuid4(),
             business_id=uuid.UUID(business_id),
@@ -157,7 +162,7 @@ async def retrieve_context(
     Retorna texto formateado listo para inyectar en el prompt de la IA.
     """
     try:
-        query_embedding = _embed_one(query)
+        query_embedding = await _embed_one(query)
     except Exception as e:
         logger.warning(f"Error generating query embedding: {e}")
         return ""

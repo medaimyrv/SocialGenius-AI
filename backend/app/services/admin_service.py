@@ -13,7 +13,7 @@ from datetime import datetime
 from math import ceil
 from uuid import UUID
 
-from sqlalchemy import func, select
+from sqlalchemy import delete as sql_delete, func, select, text
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -242,27 +242,25 @@ async def delete_user_hard(db: AsyncSession, user_id: UUID) -> AdminActionRespon
     ADVERTENCIA: Esta acción es irreversible.
     """
     user = (
-        await db.execute(
-            select(User)
-            .where(User.id == user_id)
-            .options(
-                selectinload(User.businesses),
-                selectinload(User.conversations),
-                selectinload(User.activities),
-                selectinload(User.subscription),
-            )
-        )
+        await db.execute(select(User).where(User.id == user_id))
     ).scalar_one_or_none()
 
     if not user:
         return AdminActionResponse(ok=False, message="Usuario no encontrado")
 
     email = user.email
-    # Borrar suscripción explícitamente primero (evita error NOT NULL en cascade)
-    if user.subscription:
-        await db.delete(user.subscription)
-        await db.flush()
-    await db.delete(user)
+
+    # Borrar suscripciones via SQL directo (evita que el ORM intente SET user_id=NULL)
+    # También limpia subscriptions corruptas con user_id=null que bloquean el delete
+    await db.execute(
+        text("DELETE FROM subscriptions WHERE user_id = :uid OR user_id IS NULL"),
+        {"uid": str(user_id)},
+    )
+    # Borrar el usuario via SQL — el CASCADE de la DB elimina el resto
+    await db.execute(
+        text("DELETE FROM users WHERE id = :uid"),
+        {"uid": str(user_id)},
+    )
     await db.commit()
     return AdminActionResponse(ok=True, message=f"Usuario {email} eliminado permanentemente")
 

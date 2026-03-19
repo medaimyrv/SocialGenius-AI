@@ -1,6 +1,6 @@
 """
 Endpoints para subir y gestionar documentos de referencia por negocio.
-Los documentos se indexan automáticamente en ChromaDB para RAG.
+Los documentos se indexan automáticamente en pgvector para RAG.
 """
 
 import logging
@@ -13,7 +13,7 @@ from sqlalchemy import select
 from app.api.deps import DB, CurrentUser
 from app.models.business import Business
 from app.models.document import Document
-from app.services.rag_service import rag_service
+from app.services import rag_service
 
 logger = logging.getLogger(__name__)
 router = APIRouter(prefix="/documents", tags=["documents"])
@@ -70,12 +70,13 @@ async def upload_document(
     db.add(doc)
     await db.flush()
 
-    # Indexar en ChromaDB
-    chunks = rag_service.index_document(
+    # Indexar en pgvector
+    chunks = await rag_service.index_document(
+        db=db,
         business_id=str(business_id),
         document_id=str(doc.id),
         filename=doc.filename,
-        text=text,
+        text_=text,
     )
     doc.chunk_count = chunks
     await db.commit()
@@ -132,7 +133,7 @@ async def delete_document(
     if not doc:
         raise HTTPException(status_code=404, detail="Documento no encontrado")
 
-    rag_service.delete_document(str(business_id), str(document_id))
+    await rag_service.delete_document_chunks(db, str(business_id), str(document_id))
     await db.delete(doc)
     await db.commit()
 

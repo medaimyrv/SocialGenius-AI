@@ -17,7 +17,7 @@ from app.models.content_calendar import ContentCalendar
 from app.models.content_piece import ContentPiece
 from app.models.conversation import Conversation
 from app.models.message import Message
-from app.services.rag_service import rag_service
+from app.services import rag_service
 
 logger = logging.getLogger(__name__)
 
@@ -55,7 +55,8 @@ async def send_message_and_stream(
     rag_context = ""
     if conversation.business_id:
         try:
-            rag_context = rag_service.retrieve_context(
+            rag_context = await rag_service.retrieve_context(
+                db=db,
                 business_id=str(conversation.business_id),
                 query=content,
             )
@@ -129,17 +130,19 @@ async def send_message_and_stream(
         # Indexar mensajes en RAG para memoria futura
         if conversation.business_id:
             try:
-                rag_service.index_message(
+                await rag_service.index_message(
+                    db=db,
                     business_id=str(conversation.business_id),
                     conversation_id=str(conversation.id),
                     role="user",
                     content=content,
                 )
-                rag_service.index_message(
+                await rag_service.index_message(
+                    db=db,
                     business_id=str(conversation.business_id),
                     conversation_id=str(conversation.id),
                     role="assistant",
-                    content=full_response[:1000],  # limitar tamaño indexado
+                    content=full_response[:1000],
                 )
             except Exception as e:
                 logger.warning(f"RAG indexing failed (non-fatal): {e}")

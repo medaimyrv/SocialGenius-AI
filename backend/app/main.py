@@ -1,6 +1,7 @@
 import logging
 from contextlib import asynccontextmanager
 
+import sqlalchemy as sa
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -25,10 +26,25 @@ async def lifespan(app: FastAPI):
     import app.models.subscription  # noqa
     import app.models.user_activity  # noqa
     import app.models.document  # noqa
+    import app.models.rag_chunk  # noqa
 
     logger.info(f"Connecting to DB: {settings.DATABASE_URL[:30]}...")
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
+        # Agrega columna role si no existe (para DBs creadas antes de la migración)
+        dialect = conn.dialect.name
+        if dialect == "postgresql":
+            await conn.execute(sa.text(
+                "ALTER TABLE users ADD COLUMN IF NOT EXISTS role VARCHAR(20) NOT NULL DEFAULT 'user'"
+            ))
+        else:
+            # SQLite no soporta IF NOT EXISTS en ALTER TABLE
+            try:
+                await conn.execute(sa.text(
+                    "ALTER TABLE users ADD COLUMN role VARCHAR(20) NOT NULL DEFAULT 'user'"
+                ))
+            except Exception:
+                pass  # Ya existe
     logger.info("DB tables ready ✓")
     logger.info(f"HuggingFace model: {settings.HUGGINGFACE_MODEL}")
     logger.info(f"HuggingFace API key set: {bool(settings.HUGGINGFACE_API_KEY)}")

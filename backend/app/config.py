@@ -28,6 +28,9 @@ class Settings(BaseSettings):
     STRIPE_WEBHOOK_SECRET: str = ""
     STRIPE_PRO_PRICE_ID: str = ""
 
+    # Webhooks externos (n8n, Zapier, etc.)
+    N8N_WEBHOOK_REGISTER: str = ""  # URL que se llama al registrar un nuevo usuario
+
     model_config = {"env_file": ".env", "extra": "ignore"}
 
     def model_post_init(self, __context) -> None:

@@ -30,8 +30,9 @@ from app.models.rag_chunk import RagChunk
 logger = logging.getLogger(__name__)
 
 TOP_K = 5
-CHUNK_MAX_WORDS = 300   # máximo de palabras por chunk (agrupando oraciones)
-CHUNK_OVERLAP_SENTENCES = 2  # oraciones que se solapan entre chunks consecutivos
+SIMILARITY_THRESHOLD = 0.40   # similitud mínima para considerar un chunk relevante
+CHUNK_MAX_WORDS = 300          # máximo de palabras por chunk (agrupando oraciones)
+CHUNK_OVERLAP_SENTENCES = 2    # oraciones que se solapan entre chunks consecutivos
 
 HF_EMBEDDING_MODEL = "intfloat/multilingual-e5-small"
 HF_API_URL = f"https://api-inference.huggingface.co/models/{HF_EMBEDDING_MODEL}"
@@ -274,4 +275,5 @@ async def _search(
         key=lambda x: x[1],
         reverse=True,
     )
-    return [c for c, _ in scored[:TOP_K]]
+    # Filtrar por umbral mínimo de similitud antes de retornar
+    return [c for c, score in scored[:TOP_K] if score >= SIMILARITY_THRESHOLD]

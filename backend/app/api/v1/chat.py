@@ -6,6 +6,7 @@ from fastapi.responses import StreamingResponse
 from app.api.deps import DB, CurrentUser
 from app.schemas.message import MessageCreate
 from app.services.chat_service import send_message_and_stream
+from app.services import usage_service
 
 router = APIRouter(prefix="/chat", tags=["chat"])
 
@@ -17,6 +18,7 @@ async def send_message(
     db: DB,
     current_user: CurrentUser,
 ):
+    await usage_service.check_message_limit(db, current_user.id)
     return StreamingResponse(
         send_message_and_stream(
             db=db,

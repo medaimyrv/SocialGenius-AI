@@ -64,19 +64,21 @@ async def send_message_and_stream(
         except Exception as e:
             logger.warning(f"RAG retrieval failed (non-fatal): {e}")
 
-    # Build message history for AI (from previously loaded messages)
+    # Build message history for AI — ventana deslizante de los últimos 20 mensajes
+    MAX_HISTORY = 20
     messages_for_ai = [
         {"role": msg.role.value, "content": msg.content}
-        for msg in conversation.messages
+        for msg in conversation.messages[-MAX_HISTORY:]
     ]
 
-    # Inyectar contexto RAG como mensaje de sistema si hay resultados
+    # Inyectar contexto RAG justo antes del mensaje actual (no al inicio)
+    # Así el modelo lo lee con todo el historial previo como contexto conversacional
     if rag_context:
         rag_injection = (
             f"[CONTEXTO RELEVANTE RECUPERADO]\n{rag_context}\n"
             "[Usa este contexto para dar respuestas más personalizadas y precisas.]"
         )
-        messages_for_ai.insert(0, {"role": "system", "content": rag_injection})
+        messages_for_ai.append({"role": "system", "content": rag_injection})
 
     # Add current user message
     messages_for_ai.append({"role": "user", "content": content})
@@ -145,7 +147,7 @@ async def send_message_and_stream(
                     business_id=str(conversation.business_id),
                     conversation_id=str(conversation.id),
                     role="assistant",
-                    content=full_response[:1000],
+                    content=full_response[:4000],
                 )
             except Exception as e:
                 logger.warning(f"RAG indexing failed (non-fatal): {e}")

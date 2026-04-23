@@ -21,6 +21,19 @@ PROMPT_REGISTRY = {
     ConversationType.HASHTAG_RESEARCH: HashtagResearchPrompt,
 }
 
+# Parámetros de generación por tipo de conversación
+# CALENDAR_CREATION: temperatura baja → respeta el formato exacto del prompt
+# COPYWRITING: temperatura alta → más creatividad y variedad
+# BUSINESS_ANALYSIS / CONTENT_STRATEGY: equilibrio entre creatividad y rigor
+GENERATION_PARAMS: dict[ConversationType, dict] = {
+    ConversationType.CALENDAR_CREATION:  {"temperature": 0.35, "max_tokens": 3000},
+    ConversationType.BUSINESS_ANALYSIS:  {"temperature": 0.55, "max_tokens": 3000},
+    ConversationType.CONTENT_STRATEGY:   {"temperature": 0.65, "max_tokens": 3000},
+    ConversationType.HASHTAG_RESEARCH:   {"temperature": 0.70, "max_tokens": 1500},
+    ConversationType.COPYWRITING:        {"temperature": 0.85, "max_tokens": 1500},
+    ConversationType.GENERAL:            {"temperature": 0.75, "max_tokens": 2048},
+}
+
 # General assistant system prompt
 GENERAL_SYSTEM_PROMPT = """Eres SocialGenius, un asistente de IA experto en marketing digital
 y redes sociales. Ayudas a emprendedores y pequeñas empresas a crear estrategias
@@ -53,14 +66,15 @@ class AIEngine:
         else:
             system_prompt = GENERAL_SYSTEM_PROMPT
 
+        params = GENERATION_PARAMS.get(conversation_type, GENERATION_PARAMS[ConversationType.GENERAL])
         model = settings.HUGGINGFACE_MODEL
         yield {"model": model}
 
-        async for chunk in self._stream_huggingface(system_prompt, messages, model):
+        async for chunk in self._stream_huggingface(system_prompt, messages, model, params):
             yield chunk
 
     async def _stream_huggingface(
-        self, system_prompt: str, messages: list[dict], model: str
+        self, system_prompt: str, messages: list[dict], model: str, params: dict
     ) -> AsyncGenerator[str, None]:
         api_messages = [{"role": "system", "content": system_prompt}]
         api_messages.extend(messages)
@@ -69,8 +83,8 @@ class AIEngine:
             model=model,
             messages=api_messages,
             stream=True,
-            temperature=0.7,
-            max_tokens=2048,
+            temperature=params["temperature"],
+            max_tokens=params["max_tokens"],
         )
 
         async for chunk in stream:

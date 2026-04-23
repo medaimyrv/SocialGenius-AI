@@ -1,8 +1,11 @@
+import logging
 from collections.abc import AsyncGenerator
 
 from huggingface_hub import AsyncInferenceClient
 
 from app.config import settings
+
+logger = logging.getLogger(__name__)
 from app.core.constants import ConversationType
 from app.models.business import Business
 
@@ -78,6 +81,13 @@ class AIEngine:
     ) -> AsyncGenerator[str, None]:
         api_messages = [{"role": "system", "content": system_prompt}]
         api_messages.extend(messages)
+
+        logger.debug(
+            "Prompt enviado al modelo | model=%s temp=%.2f max_tokens=%d msgs=%d "
+            "system_chars=%d",
+            model, params["temperature"], params["max_tokens"],
+            len(api_messages), len(system_prompt),
+        )
 
         stream = await self.hf_client.chat.completions.create(
             model=model,

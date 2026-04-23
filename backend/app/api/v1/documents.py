@@ -1,6 +1,6 @@
 """
 Endpoints para subir y gestionar documentos de referencia por negocio.
-Los documentos se indexan automáticamente en pgvector para RAG.
+Los documentos se indexan automáticamente en la tabla rag_chunks (embeddings JSONB).
 """
 
 import logging
@@ -70,7 +70,7 @@ async def upload_document(
     db.add(doc)
     await db.flush()
 
-    # Indexar en pgvector
+    # Indexar en RAG
     chunks = await rag_service.index_document(
         db=db,
         business_id=str(business_id),
@@ -78,9 +78,21 @@ async def upload_document(
         filename=doc.filename,
         text_=text,
     )
+
+    if chunks == 0:
+        # La indexación falló o el texto no produjo ningún chunk válido.
+        # Hacemos rollback para no dejar un documento huérfano sin vectores.
+        await db.rollback()
+        raise HTTPException(
+            status_code=422,
+            detail="El documento fue procesado pero no se pudo indexar. "
+                   "Verifica que tenga contenido de texto legible.",
+        )
+
     doc.chunk_count = chunks
     await db.commit()
 
+    logger.info(f"Document indexed | doc={doc.id} business={business_id} chunks={chunks}")
     return {
         "id": str(doc.id),
         "filename": doc.filename,

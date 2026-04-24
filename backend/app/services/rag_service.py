@@ -258,13 +258,16 @@ async def _search(
     query_embedding: list[float],
     source_type: str,
 ) -> list[RagChunk]:
-    """Carga chunks del negocio y retorna los TOP_K más similares al query."""
+    """Carga hasta 500 chunks recientes y retorna los TOP_K más similares al query."""
     chunks = (await db.execute(
-        select(RagChunk).where(
+        select(RagChunk)
+        .where(
             RagChunk.business_id == business_id,
             RagChunk.source_type == source_type,
             RagChunk.embedding.isnot(None),
         )
+        .order_by(RagChunk.created_at.desc())
+        .limit(500)
     )).scalars().all()
 
     if not chunks:

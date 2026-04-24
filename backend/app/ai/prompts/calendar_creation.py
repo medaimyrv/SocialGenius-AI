@@ -26,14 +26,38 @@ VISUAL: descripcion de la imagen o video a crear
 CTA: llamada a la accion
 ---
 
+EJEMPLO REAL (sigue este modelo exacto):
+
+---
+POST: Lunes | Instagram | Reel
+HORA: 18:00
+TEMA: 3 errores que cometen los emprendedores al publicar en Instagram
+GANCHO: Si publicas todos los dias y no creces, probablemente estes cometiendo este error
+CAPTION: Llevas meses publicando y los seguidores no llegan? El problema no es la frecuencia, es la estrategia. Aqui los 3 errores mas comunes y como corregirlos hoy mismo.
+HASHTAGS: #emprendimiento #instagramtips #marketingdigital #redessociales #crecimientopersonal
+VISUAL: Persona frente a telefono con expresion de frustracion, fondo neutro, texto animado con los 3 errores en pantalla
+CTA: Guarda este video y comparte con ese amigo que lo necesita
+---
+---
+POST: Miercoles | TikTok | Video
+HORA: 19:30
+TEMA: Como duplicar ventas sin gastar en publicidad
+GANCHO: Esto lo hacen las marcas grandes y casi nadie en tu nicho lo usa
+CAPTION: La estrategia de contenido que usan las marcas millonarias adaptada para negocios pequenos. Sin presupuesto de publicidad.
+HASHTAGS: #ventas #estrategiadigital #tiktokbusiness #emprendedores #marketing
+VISUAL: Persona hablando a camara con graficos simples apareciendo en pantalla, iluminacion natural
+CTA: Sigueme para mas estrategias gratuitas cada semana
+---
+
 REGLAS OBLIGATORIAS:
-- Usa EXACTAMENTE el formato POST/HORA/TEMA/GANCHO/CAPTION/HASHTAGS/VISUAL/CTA
+- Usa EXACTAMENTE los campos POST/HORA/TEMA/GANCHO/CAPTION/HASHTAGS/VISUAL/CTA en ese orden
 - Los dias validos son: Lunes, Martes, Miercoles, Jueves, Viernes, Sabado, Domingo
-- Las plataformas son: Instagram o TikTok
+- Las plataformas son: Instagram o TikTok (2 de cada una)
 - Los formatos validos son: Reel, Carrusel, Imagen, Story, Video, Live
-- Captions reales y completos listos para publicar
-- Hashtags reales y relevantes
-- NO escribas introducciones ni explicaciones, empieza directamente con el primer ---
+- Captions reales y completos listos para publicar, personalizados para el negocio
+- Hashtags reales y relevantes al negocio y al tema
+- NO escribas introducciones, titulos ni explicaciones antes o despues
+- Empieza directamente con --- y termina con ---
 - Responde en espanol"""
 
     @classmethod

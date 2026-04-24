@@ -1,3 +1,4 @@
+import asyncio
 import logging
 from collections.abc import AsyncGenerator
 
@@ -83,22 +84,35 @@ class AIEngine:
         api_messages.extend(messages)
 
         logger.debug(
-            "Prompt enviado al modelo | model=%s temp=%.2f max_tokens=%d msgs=%d "
-            "system_chars=%d",
+            "Prompt enviado al modelo | model=%s temp=%.2f max_tokens=%d msgs=%d system_chars=%d",
             model, params["temperature"], params["max_tokens"],
             len(api_messages), len(system_prompt),
         )
 
-        stream = await self.hf_client.chat.completions.create(
-            model=model,
-            messages=api_messages,
-            stream=True,
-            temperature=params["temperature"],
-            max_tokens=params["max_tokens"],
-        )
+        last_error = None
+        for attempt in range(3):
+            try:
+                stream = await self.hf_client.chat.completions.create(
+                    model=model,
+                    messages=api_messages,
+                    stream=True,
+                    temperature=params["temperature"],
+                    max_tokens=params["max_tokens"],
+                )
+                async for chunk in stream:
+                    if chunk.choices and chunk.choices[0].delta.content:
+                        yield chunk.choices[0].delta.content
+                return
+            except Exception as e:
+                last_error = e
+                if attempt < 2:
+                    wait = 2 ** attempt  # 1s, 2s
+                    logger.warning(
+                        "HuggingFace API error (intento %d/3): %s — reintentando en %ds",
+                        attempt + 1, e, wait,
+                    )
+                    await asyncio.sleep(wait)
 
-        async for chunk in stream:
-            if chunk.choices and chunk.choices[0].delta.content:
-                yield chunk.choices[0].delta.content
+        raise last_error
 
 ai_engine = AIEngine()

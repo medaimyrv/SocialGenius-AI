@@ -4,7 +4,7 @@ from fastapi import APIRouter, Request
 from fastapi.responses import StreamingResponse
 
 from app.api.deps import DB, CurrentUser
-from app.main import limiter
+from app.core.limiter import limiter
 from app.schemas.message import MessageCreate
 from app.services.chat_service import send_message_and_stream
 from app.services import usage_service
